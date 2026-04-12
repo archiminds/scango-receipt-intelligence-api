@@ -81,14 +81,13 @@ def _extract_method_and_path(event: Dict[str, Any]) -> (Optional[str], Optional[
     method = event.get('httpMethod')
     path = event.get('path')
 
-    if not method or not path:
-        request_context = event.get('requestContext', {})
-        http_meta = request_context.get('http', {})
+    request_context = event.get('requestContext', {})
+    http_meta = request_context.get('http', {})
 
-        method = method or http_meta.get('method')
-        path = path or http_meta.get('path') or event.get('rawPath')
+    method = method or http_meta.get('method')
+    path = path or http_meta.get('path') or event.get('rawPath')
 
-    if path and request_context := event.get('requestContext', {}):
+    if path and request_context:
         stage = request_context.get('stage')
         if stage and path.startswith(f"/{stage}"):
             # Strip stage prefix so routing works consistently
