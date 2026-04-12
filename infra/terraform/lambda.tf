@@ -1,7 +1,6 @@
 locals {
   lambda_environment_variables = merge(
     {
-      AWS_REGION          = var.aws_region
       DYNAMODB_TABLE_NAME = local.dynamodb_table_name
       BEDROCK_MODEL_ID    = var.bedrock_model_id
       LOG_GROUP_NAME      = local.lambda_log_group_name
