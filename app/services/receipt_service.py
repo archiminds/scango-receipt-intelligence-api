@@ -1,6 +1,7 @@
 import logging
 import os
 import time
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Optional
 from app.models.schemas import (
     ReceiptParseRequest, ReceiptParseResponse, CacheEntry,
@@ -101,7 +102,7 @@ class ReceiptService:
                 parsed_data = Parser.extract_key_fields(cleaned_text)
 
             # Step 6: Normalize extracted values
-            normalized_data = self._normalize_parsed_data(parsed_data, request.currency)
+            normalized_data = self._normalize_parsed_data(parsed_data, request.currency, cleaned_text)
             logger.debug(f"Normalized data for request {request_id}")
 
             # Step 7: Compute GST if missing
@@ -216,7 +217,7 @@ class ReceiptService:
             ttl_timestamp = int(time.time()) + ttl_seconds
 
             cache_entry = CacheEntry(
-                hash_key=text_hash,
+                request_hash=text_hash,
                 receipt_text=normalized_text,
                 response={
                     'vendor': response.vendor,
@@ -242,7 +243,7 @@ class ReceiptService:
         except DynamoDBCacheError as e:
             logger.warning(f"Cache save failed: {e}")
 
-    def _normalize_parsed_data(self, parsed_data: dict, currency: Optional[str]) -> dict:
+    def _normalize_parsed_data(self, parsed_data: dict, currency: Optional[str], receipt_text: str) -> dict:
         """
         Normalize parsed data from Bedrock or fallback parser.
 
@@ -253,13 +254,31 @@ class ReceiptService:
         Returns:
             Normalized data dictionary
         """
+        vendor = Normalizer.normalize_vendor(parsed_data.get('vendor'))
+        receipt_date = Normalizer.normalize_date(parsed_data.get('receipt_date'))
+        if not receipt_date:
+            receipt_date = Normalizer.extract_date_from_text(receipt_text)
+
+        items = Normalizer.normalize_items(parsed_data.get('items', []))
+        subtotal_amount = Normalizer.normalize_amount(parsed_data.get('subtotal_amount'))
+        total_amount = Normalizer.normalize_amount(parsed_data.get('total_amount'))
+        gst_amount = Normalizer.normalize_amount(parsed_data.get('gst_amount'))
+
+        if subtotal_amount is None and items:
+            subtotal_amount = sum(
+                (item.total_price or Decimal('0.00')) for item in items
+            ).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) if items else None
+
+        if total_amount is None and subtotal_amount is not None:
+            total_amount = subtotal_amount
+
         return {
-            'vendor': parsed_data.get('vendor'),
-            'receipt_date': parsed_data.get('receipt_date'),
-            'items': parsed_data.get('items', []),
-            'subtotal_amount': Normalizer.normalize_amount(parsed_data.get('subtotal_amount')),
-            'total_amount': Normalizer.normalize_amount(parsed_data.get('total_amount')),
-            'gst_amount': Normalizer.normalize_amount(parsed_data.get('gst_amount')),
+            'vendor': vendor,
+            'receipt_date': receipt_date,
+            'items': items,
+            'subtotal_amount': subtotal_amount,
+            'total_amount': total_amount,
+            'gst_amount': gst_amount,
             'currency': parsed_data.get('currency', currency or 'AUD')
         }
 

@@ -32,7 +32,7 @@ class DynamoDBCacheClient:
         self.dynamodb = dynamodb_client or boto3.client('dynamodb', region_name=region)
         logger.info(f"Initialized DynamoDB cache client for table {table_name} in region {region}")
 
-    def get_cached_result(self, hash_key: str) -> Optional[CacheEntry]:
+    def get_cached_result(self, request_hash: str) -> Optional[CacheEntry]:
         """
         Retrieve cached result from DynamoDB.
 
@@ -46,12 +46,12 @@ class DynamoDBCacheClient:
             DynamoDBCacheError: If retrieval fails due to client errors
         """
         try:
-            logger.debug(f"Checking cache for hash_key: {hash_key}")
+            logger.debug(f"Checking cache for request_hash: {request_hash}")
 
             response = self.dynamodb.get_item(
                 TableName=self.table_name,
                 Key={
-                    'hash_key': {'S': hash_key}
+                    'request_hash': {'S': request_hash}
                 }
             )
 
@@ -62,24 +62,23 @@ class DynamoDBCacheClient:
                 current_time = int(time.time())
 
                 if current_time < ttl:
-                    logger.debug(f"Cache hit for hash_key: {hash_key}")
+                    logger.debug(f"Cache hit for request_hash: {request_hash}")
                     # Deserialize the cached response
                     response_data = json.loads(item['response']['S'])
                     # Convert back to ReceiptParseResponse
                     from app.models.schemas import ReceiptParseResponse
                     cached_response = ReceiptParseResponse(**response_data)
                     return CacheEntry(
-                        hash_key=hash_key,
+                        request_hash=request_hash,
                         receipt_text=item['receipt_text']['S'],
-                        response=response_data,  # Store as dict for CacheEntry
+                        response=response_data,
                         ttl=ttl
                     )
                 else:
-                    logger.debug(f"Cache expired for hash_key: {hash_key}, deleting")
-                    # TTL expired, delete the item
-                    self._delete_expired_item(hash_key)
+                    logger.debug(f"Cache expired for request_hash: {request_hash}, deleting")
+                    self._delete_expired_item(request_hash)
 
-            logger.debug(f"Cache miss for hash_key: {hash_key}")
+            logger.debug(f"Cache miss for request_hash: {request_hash}")
             return None
 
         except ClientError as e:
@@ -110,7 +109,7 @@ class DynamoDBCacheClient:
             DynamoDBCacheError: If save fails due to client errors
         """
         try:
-            logger.debug(f"Saving cache entry for hash_key: {cache_entry.hash_key}")
+            logger.debug(f"Saving cache entry for request_hash: {cache_entry.request_hash}")
 
             # Serialize the response
             response_json = json.dumps(cache_entry.response, default=str)
@@ -118,14 +117,14 @@ class DynamoDBCacheClient:
             self.dynamodb.put_item(
                 TableName=self.table_name,
                 Item={
-                    'hash_key': {'S': cache_entry.hash_key},
+                    'request_hash': {'S': cache_entry.request_hash},
                     'receipt_text': {'S': cache_entry.receipt_text},
                     'response': {'S': response_json},
                     'ttl': {'N': str(cache_entry.ttl)}
                 }
             )
 
-            logger.debug(f"Successfully cached result for hash_key: {cache_entry.hash_key}")
+            logger.debug(f"Successfully cached result for request_hash: {cache_entry.request_hash}")
             return True
 
         except ClientError as e:
@@ -139,7 +138,7 @@ class DynamoDBCacheClient:
             logger.error(f"Unexpected error in cache save: {e}", exc_info=True)
             raise DynamoDBCacheError(f"Unexpected error in cache save: {e}") from e
 
-    def _delete_expired_item(self, hash_key: str):
+    def _delete_expired_item(self, request_hash: str):
         """
         Delete expired cache item.
 
@@ -150,9 +149,9 @@ class DynamoDBCacheClient:
             self.dynamodb.delete_item(
                 TableName=self.table_name,
                 Key={
-                    'hash_key': {'S': hash_key}
+                    'request_hash': {'S': request_hash}
                 }
             )
-            logger.debug(f"Deleted expired cache item: {hash_key}")
+            logger.debug(f"Deleted expired cache item: {request_hash}")
         except Exception as e:
-            logger.warning(f"Failed to delete expired cache item {hash_key}: {e}")
+            logger.warning(f"Failed to delete expired cache item {request_hash}: {e}")

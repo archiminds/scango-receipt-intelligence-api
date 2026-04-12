@@ -23,6 +23,7 @@ resource "aws_lambda_function" "receipt" {
   filename         = var.lambda_zip_path
   handler          = "app.api.handler.lambda_handler"
   runtime          = "python3.11"
+  architectures    = var.lambda_architectures
   memory_size      = var.lambda_memory_size
   timeout          = var.lambda_timeout
   source_code_hash = filebase64sha256(var.lambda_zip_path)

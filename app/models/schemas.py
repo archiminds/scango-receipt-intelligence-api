@@ -69,7 +69,7 @@ class ReceiptParseResponse(BaseModel):
 
 class CacheEntry(BaseModel):
     """Model for DynamoDB cache entries."""
-    hash_key: str = Field(..., description="SHA-256 hash of normalized receipt text")
+    request_hash: str = Field(..., description="SHA-256 hash of normalized receipt text")
     receipt_text: str = Field(..., description="Original receipt text")
     response: Dict[str, Any] = Field(..., description="Cached response data")
     ttl: int = Field(..., description="TTL timestamp for DynamoDB expiration", gt=0)

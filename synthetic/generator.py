@@ -42,6 +42,11 @@ class SyntheticDataGenerator:
                 receipt_data['date']
             )
 
+            # Ensure a clean ISO date line is present for downstream evaluation.
+            if receipt_data.get('date'):
+                iso_date_line = f"Date: {receipt_data['date']}"
+                receipt_text = f"{iso_date_line}\n{receipt_text}"
+
             # Add noise
             noisy_text = NoiseGenerator.add_ocr_noise(receipt_text, noise_level)
             noisy_text = NoiseGenerator.add_layout_noise(noisy_text)

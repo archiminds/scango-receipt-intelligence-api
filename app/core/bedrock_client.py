@@ -53,7 +53,11 @@ class BedrockClient:
                 "messages": [
                     {
                         "role": "user",
-                        "content": prompt
+                        "content": [
+                            {
+                                "text": prompt
+                            }
+                        ]
                     }
                 ],
                 "inferenceConfig": {
@@ -70,6 +74,7 @@ class BedrockClient:
             )
 
             response_body = json.loads(response['body'].read())
+            logger.debug(f"Bedrock raw response: {json.dumps(response_body)}")
             parsed_data = self._extract_structured_data(response_body)
 
             if parsed_data:
@@ -94,35 +99,50 @@ class BedrockClient:
             logger.error(f"Unexpected error in Bedrock parsing: {e}", exc_info=True)
             raise BedrockClientError(f"Unexpected error in Bedrock parsing: {e}") from e
 
+    SUPPORTED_CATEGORIES = [
+        "Food",
+        "Staff Amenities",
+        "Travel",
+        "Car",
+        "Utilities",
+        "Office Supplies",
+        "Equipment",
+        "Accounting Fee",
+        "Operational Cost",
+        "Unclassified"
+    ]
+
     def _build_parse_prompt(self, receipt_text: str, currency: str) -> str:
         """Build the prompt for receipt parsing."""
+        categories = ", ".join(self.SUPPORTED_CATEGORIES)
         return f"""
-Parse the following receipt text and extract structured information.
-Return ONLY a valid JSON object with the following structure:
+You are a receipts parsing engine. Convert the OCR text into structured JSON.
+Output ONLY valid JSON with this schema (do not wrap in Markdown):
 {{
-    "vendor": "store name or null",
-    "receipt_date": "YYYY-MM-DD or null",
-    "items": [
-        {{
-            "name": "item name",
-            "quantity": 1,
-            "unit_price": 10.50,
-            "total_price": 10.50
-        }}
-    ],
-    "subtotal_amount": 10.50,
-    "total_amount": 11.55,
-    "gst_amount": 1.05,
-    "currency": "{currency}"
+  "vendor": "store name or null",
+  "receipt_date": "YYYY-MM-DD or null",
+  "items": [
+    {{
+      "name": "item name",
+      "quantity": 1,
+      "unit_price": 10.50,
+      "total_price": 10.50
+    }}
+  ],
+  "subtotal_amount": 10.50,
+  "total_amount": 11.55,
+  "gst_amount": 1.05,
+  "currency": "{currency}",
+  "category": "one of [{categories}]"
 }}
 
-Rules:
-- Extract vendor name from the receipt
-- Parse date in YYYY-MM-DD format
-- Extract all items with their prices
-- Calculate amounts as decimal numbers
-- If GST is not explicitly mentioned, leave gst_amount as null
-- Be precise with numbers and dates
+Instructions:
+- Always return ISO dates (YYYY-MM-DD). If the receipt has no date, return null.
+- Infer GST and subtotal only if present; otherwise return null.
+- For each item, include quantity (default 1), unit_price, and total_price. If only one price exists, set both accordingly.
+- Vendor should be concise (e.g., "Coles Broadway").
+- Category must be selected from [{categories}] using common business expense meaning. If unsure, use "Unclassified".
+- Keep numbers as decimals (no strings) and currency uppercase.
 
 Receipt text:
 {receipt_text}
@@ -131,18 +151,35 @@ Receipt text:
     def _extract_structured_data(self, response_body: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Extract structured data from Bedrock response."""
         try:
-            content = response_body.get('content', [{}])[0].get('text', '')
-            if not content:
+            content_text = ""
+
+            # Legacy response format
+            legacy_content = response_body.get('content', [])
+            if legacy_content:
+                content_text = legacy_content[0].get('text', '') or legacy_content[0].get('content', '')
+
+            # Newer response format under output.message.content
+            if not content_text and 'output' in response_body:
+                message = response_body.get('output', {}).get('message', {})
+                parts = message.get('content', [])
+                texts = [
+                    part.get('text') or part.get('output_text') or ''
+                    for part in parts
+                ]
+                content_text = ''.join(texts).strip()
+
+            if not content_text:
+                logger.warning("Bedrock response missing text content: %s", json.dumps(response_body))
                 return None
 
             # Try to parse JSON from the response
-            start_idx = content.find('{')
-            end_idx = content.rfind('}') + 1
+            start_idx = content_text.find('{')
+            end_idx = content_text.rfind('}') + 1
 
             if start_idx == -1 or end_idx == 0:
                 return None
 
-            json_str = content[start_idx:end_idx]
+            json_str = content_text[start_idx:end_idx]
             return json.loads(json_str)
 
         except (json.JSONDecodeError, KeyError, IndexError) as e:

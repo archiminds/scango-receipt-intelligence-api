@@ -14,39 +14,82 @@ class Normalizer:
         if not date_str:
             return None
 
-        # Common date patterns
-        patterns = [
-            r'(\d{1,2})[/-](\d{1,2})[/-](\d{4})',  # DD/MM/YYYY or MM/DD/YYYY
-            r'(\d{4})[/-](\d{1,2})[/-](\d{1,2})',  # YYYY/MM/DD
-            r'(\d{1,2})\s+(\w{3})\s+(\d{4})',      # DD Mon YYYY
+        cleaned = date_str.strip()
+        # Remove common prefixes
+        cleaned = re.sub(r'(?i)(receipt|invoice)?\s*date[:\-]?', '', cleaned).strip()
+        cleaned = cleaned.replace(',', ' ')
+        cleaned = re.sub(r'\s+', ' ', cleaned)
+
+        # Strip any trailing time component (e.g., 2026-04-10 09:12)
+        time_match = re.search(r'((?:\d{4}|\d{1,2})[/-]\d{1,2}[/-](?:\d{4}|\d{2}))[\sT]+\d{1,2}:\d{2}(?::\d{2})?', cleaned)
+        if time_match:
+            cleaned = time_match.group(1)
+
+        formats = [
+            "%Y-%m-%d",
+            "%Y/%m/%d",
+            "%Y.%m.%d",
+            "%d-%m-%Y",
+            "%m-%d-%Y",
+            "%d/%m/%Y",
+            "%m/%d/%Y",
+            "%d %b %Y",
+            "%d %B %Y",
+            "%b %d %Y",
+            "%B %d %Y",
         ]
 
-        for pattern in patterns:
-            match = re.search(pattern, date_str, re.IGNORECASE)
-            if match:
-                try:
-                    if len(match.groups()) == 3:
-                        parts = [int(g) for g in match.groups()]
-                        # Assume DD/MM/YYYY for ambiguous formats
-                        if parts[2] > 31:  # Year first
-                            year, month, day = parts
-                        elif parts[0] > 12:  # Day first
-                            day, month, year = parts
-                        else:  # Assume DD/MM/YYYY
-                            day, month, year = parts
+        for fmt in formats:
+            try:
+                date_obj = datetime.strptime(cleaned, fmt)
+                return date_obj.strftime('%Y-%m-%d')
+            except ValueError:
+                continue
 
-                        date_obj = datetime(year, month, day)
-                        return date_obj.strftime('%Y-%m-%d')
-                except ValueError:
-                    continue
+        # Attempt to pull date fragments if additional text remains
+        fragment_patterns = [
+            r'\d{4}[/-]\d{1,2}[/-]\d{1,2}',
+            r'\d{1,2}[/-]\d{1,2}[/-]\d{2,4}',
+            r'\d{1,2}\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+\d{2,4}',
+            r'(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+\d{1,2},?\s+\d{2,4}',
+        ]
+
+        for pattern in fragment_patterns:
+            match = re.search(pattern, cleaned, re.IGNORECASE)
+            if match:
+                return Normalizer.normalize_date(match.group(0))
 
         return None
 
     @staticmethod
-    def normalize_amount(amount_str: Optional[Union[str, float, int]]) -> Optional[Decimal]:
+    def extract_date_from_text(text: Optional[str]) -> Optional[str]:
+        """Pull the first recognizable date from free-form text."""
+        if not text:
+            return None
+
+        patterns = [
+            r'\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b',
+            r'\b\d{4}[/-]\d{1,2}[/-]\d{1,2}\b',
+            r'\b\d{1,2}\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+\d{2,4}\b'
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, text, re.IGNORECASE)
+            if match:
+                normalized = Normalizer.normalize_date(match.group(0))
+                if normalized:
+                    return normalized
+        return None
+
+    @staticmethod
+    def normalize_amount(amount_str: Optional[Union[str, float, int, Decimal]]) -> Optional[Decimal]:
         """Normalize amount string or number to Decimal."""
         if amount_str is None:
             return None
+
+        # If already Decimal, just quantize
+        if isinstance(amount_str, Decimal):
+            return amount_str.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 
         # Convert to string if it's a number
         if isinstance(amount_str, (float, int)):
@@ -92,11 +135,26 @@ class Normalizer:
 
         for item in items_data:
             try:
+                if isinstance(item, ParsedItem):
+                    item_data = item.dict()
+                else:
+                    item_data = item
+
+                raw_quantity = item_data.get('quantity', 1) or 1
+                quantity = max(1, int(raw_quantity))
+                unit_price = Normalizer.normalize_amount(item_data.get('unit_price'))
+                total_price = Normalizer.normalize_amount(item_data.get('total_price'))
+
+                if total_price is None and unit_price is not None:
+                    total_price = (unit_price * Decimal(quantity)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+                elif unit_price is None and total_price is not None:
+                    unit_price = (total_price / Decimal(quantity)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
                 normalized_item = ParsedItem(
-                    name=item.get('name', '').strip(),
-                    quantity=int(item.get('quantity', 1)),
-                    unit_price=Normalizer.normalize_amount(item.get('unit_price')),
-                    total_price=Normalizer.normalize_amount(item.get('total_price'))
+                    name=(item_data.get('name') or '').strip(),
+                    quantity=quantity,
+                    unit_price=unit_price,
+                    total_price=total_price
                 )
                 if normalized_item.name:
                     normalized_items.append(normalized_item)

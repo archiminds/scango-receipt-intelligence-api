@@ -117,6 +117,37 @@ python evaluation/regression_runner.py --test-data synthetic/evaluation_data.jso
 POST {api-endpoint}/v1/receipts/parse
 ```
 
+### Authentication
+- **AWS IAM (required):** The HTTP API enforces `AWS_IAM` authorization. Every request must be SigV4-signed with credentials that have the `execute-api:Invoke` permission on the API. Unsigned calls return `403 Forbidden`.
+
+Sample IAM policy (broad):
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "execute-api:Invoke",
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+Restrictive example (replace placeholders):
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "execute-api:Invoke",
+      "Resource": "arn:aws:execute-api:${region}:${account}:${api_id}/${stage}/POST/v1/receipts/parse"
+    }
+  ]
+}
+```
+
 ### Request Format
 ```json
 {

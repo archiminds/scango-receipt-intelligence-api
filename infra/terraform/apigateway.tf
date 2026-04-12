@@ -1,13 +1,23 @@
 resource "aws_apigatewayv2_api" "http" {
   name          = local.api_name
   protocol_type = "HTTP"
-  body = templatefile(
-    "${path.module}/../../ScanGoReceiptParsingEnrichmentAPI.yml",
-    {
-      lambda_integration_uri = aws_lambda_function.receipt.invoke_arn
-    }
-  )
-  tags = local.common_tags
+  description   = "ScanGo receipt parsing API"
+  tags          = local.common_tags
+}
+
+resource "aws_apigatewayv2_integration" "lambda" {
+  api_id                 = aws_apigatewayv2_api.http.id
+  integration_type       = "AWS_PROXY"
+  integration_method     = "POST"
+  payload_format_version = "2.0"
+  integration_uri        = aws_lambda_function.receipt.invoke_arn
+}
+
+resource "aws_apigatewayv2_route" "parse" {
+  api_id             = aws_apigatewayv2_api.http.id
+  route_key          = "POST /v1/receipts/parse"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  authorization_type = "AWS_IAM"
 }
 
 resource "aws_cloudwatch_log_group" "api" {

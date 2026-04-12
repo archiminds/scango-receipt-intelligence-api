@@ -15,34 +15,37 @@ class Categorizer:
     RULES = {
         'Car': [
             'bp', 'ampol', 'caltex', 'shell', 'car park', 'point parking',
-            'motorserve', 'nrma', 'linkt', 'car rental'
+            'motorserve', 'nrma', 'linkt', 'car rental', 'fuel', 'petrol'
         ],
         'Travel': [
             'uber', 'taxi', 'airlines', 'philippines airlines', 'singapore airlines',
-            'transport', '7-eleven', 'linkt', 'parking'
+            'transport', '7-eleven', 'linkt', 'parking', 'flight', 'airfare'
         ],
         'Utilities': [
-            'agl', 'amaysim', 'optus', 'telstra', 'water'
+            'agl', 'amaysim', 'optus', 'telstra', 'water', 'internet service', 'mobile plan'
         ],
         'Equipment': [
-            'safe', 'speaker', 'keyboard', 'monitor', 'storage', 'checkers'
+            'safe', 'speaker', 'keyboard', 'monitor', 'storage', 'checkers', 'laptop', 'printer'
         ],
         'Food': [
             'nandos', 'absolute thai', 'chef noodles', 'espresso', 'dominos',
-            'dosa hut', 'arjun indian', 'betty burger', 'restaurant', 'bakery'
+            'dosa hut', 'arjun indian', 'betty burger', 'restaurant', 'bakery',
+            'flat white', 'banana bread', 'coffee'
         ],
         'Staff Amenities': [
-            'aldi', 'coles', 'woolworths', 'espresso', 'amazon'
+            'aldi', 'coles', 'woolworths', 'amazon', 'milk', 'bread', 'eggs', 'snacks',
+            'reusable bag'
         ],
         'Office Supplies': [
-            'hp instant ink', 'stationery', 'amazon', 'jb hi-fi', 'ink', 'paper'
+            'hp instant ink', 'stationery', 'amazon', 'jb hi-fi', 'ink', 'paper',
+            'notebook', 'pen', 'printer paper'
         ],
         'Accounting Fee': [
-            'accountant fee', 'sjb', 'xero'
+            'accountant fee', 'sjb', 'xero', 'myob'
         ],
         'Operational Cost': [
             'gsuite', 'google', 'apple subscriptions', 'chatgpt', 'asic',
-            'flick', 'ableton', 'software', 'subscription', 'gopro'
+            'flick', 'ableton', 'software', 'subscription', 'gopro', 'aws', 'azure'
         ]
     }
 
@@ -66,14 +69,20 @@ class Categorizer:
 
         # Try rule-based categorization first
         rule_result = self._categorize_by_rules(text_to_analyze)
-        if rule_result and rule_result.confidence >= 0.8:
-            return rule_result
+        fallback_rule_result = None
+        if rule_result:
+            fallback_rule_result = rule_result
+            if rule_result.confidence >= 0.8:
+                return rule_result
 
         # If rules are ambiguous, use AI
         if self.bedrock_client:
             ai_result = self._categorize_by_ai(vendor, items, receipt_text)
-            if ai_result:
+            if ai_result and ai_result.category.lower() != 'unclassified':
                 return ai_result
+
+        if fallback_rule_result:
+            return fallback_rule_result
 
         # Fallback to Unclassified
         return CategorizationResult(

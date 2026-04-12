@@ -1,6 +1,13 @@
 import json
 import logging
+import sys
+from pathlib import Path
 from typing import List, Dict, Any, Optional
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 from evaluation.metrics import EvaluationMetrics
 
 logger = logging.getLogger(__name__)
@@ -141,21 +148,29 @@ class ReceiptEvaluator:
         print("RECEIPT PARSING EVALUATION REPORT")
         print("="*50)
 
-        print(".3f")
+        print(f"Overall score: {report['overall_score']:.3f}")
         print(f"Total samples evaluated: {report['total_samples']}")
 
         print("\nField Scores:")
         for field, score in report['field_scores'].items():
-            print("25s")
+            print(f"  {field:15s}: {score:.3f}")
 
-        print("\nError Analysis:")
+        print("\nError Analysis (field error rates):")
         for field, rate in report['error_analysis']['field_error_rates'].items():
-            print("25s")
+            print(f"  {field:15s}: {rate:.1%}")
 
         if report['error_analysis']['common_failures']:
             print(f"\nTop {len(report['error_analysis']['common_failures'])} Failure Cases:")
             for failure in report['error_analysis']['common_failures']:
                 print(f"  Sample {failure['sample_index']}: Failed {failure['failed_fields']}")
+
+        if report.get('confidence_intervals'):
+            print("\nConfidence Intervals:")
+            for field, info in report['confidence_intervals'].items():
+                print(
+                    f"  {field:15s}: mean={info['mean']:.3f}, "
+                    f"CI95=({info['ci_lower']:.3f}, {info['ci_upper']:.3f})"
+                )
 
         print("\n" + "="*50)
 

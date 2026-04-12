@@ -44,6 +44,7 @@ Set via `terraform.tfvars`, environment variables, or CLI flags:
 - `lambda_function_name` (optional override)
 - `dynamodb_table_name` (optional override)
 - `enable_s3` and `s3_bucket_name` (when S3 storage is desired)
+- `api_shared_secret` (optional shared secret that clients must send in `X-Api-Secret`)
 - `tags` (map) for ownership/compliance metadata
 
 Copy `terraform.tfvars.example` to `terraform.tfvars` and edit the values:
@@ -62,6 +63,32 @@ terraform apply tfplan
 ```
 
 Use `-var-file` if you maintain multiple environment configs.
+
+## Calling the secured API
+- The route now requires AWS Signature Version 4 (IAM) authentication. Anonymous curl/browser calls return 403.
+- In **Postman**, choose *Authorization → AWS Signature*, supply access key/secret/session token, set the region to `us-east-1`, service to `execute-api`, and send the request.
+- In code, use `requests-aws4auth` (Python) or the AWS SDK; example:
+
+```python
+import json
+import requests
+from requests_aws4auth import AWS4Auth
+import boto3
+
+session = boto3.Session(profile_name="default", region_name="us-east-1")
+creds = session.get_credentials().get_frozen_credentials()
+auth = AWS4Auth(creds.access_key, creds.secret_key, session.region_name, "execute-api", session_token=creds.token)
+
+url = "https://<api-id>.execute-api.us-east-1.amazonaws.com/prod/v1/receipts/parse"
+payload = {
+    "receipt_text": "COLES BROADWAY...",
+    "currency": "AUD"
+}
+headers = {"Content-Type": "application/json"}
+
+resp = requests.post(url, data=json.dumps(payload), headers=headers, auth=auth)
+print(resp.status_code, resp.text)
+```
 
 ## Testing the deployed API
 After apply, capture the outputs (or run `terraform output`). Invoke the API with curl:

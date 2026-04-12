@@ -39,6 +39,12 @@ variable "lambda_memory_size" {
   default     = 512
 }
 
+variable "lambda_architectures" {
+  description = "Lambda instruction set architectures"
+  type        = list(string)
+  default     = ["arm64"]
+}
+
 variable "lambda_timeout" {
   description = "Timeout in seconds for the Lambda function"
   type        = number
