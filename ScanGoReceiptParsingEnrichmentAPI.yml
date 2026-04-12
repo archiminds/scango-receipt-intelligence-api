@@ -29,6 +29,11 @@ paths:
         categorises the expense using hybrid logic (rules first, AI for ambiguous
         cases), validates the output, and returns structured JSON.
       operationId: parseReceipt
+      x-amazon-apigateway-integration:
+        payloadFormatVersion: "2.0"
+        type: aws_proxy
+        httpMethod: POST
+        uri: ${lambda_integration_uri}
       requestBody:
         required: true
         content:

@@ -1,0 +1,22 @@
+# Copy to terraform.tfvars and customize per environment
+
+aws_region            = "us-east-1"
+aws_profile           = null
+project_name          = "scango-receipt-intelligence-api"
+environment           = "dev"
+lambda_function_name  = "scango-receipt-intelligence-api-dev-lambda"
+lambda_zip_path       = "../../dist/receipt_lambda.zip"
+dynamodb_table_name   = "scango-receipt-intelligence-api-dev-cache"
+bedrock_model_id      = "amazon.nova-pro-v1:0"
+lambda_memory_size    = 512
+lambda_timeout        = 30
+enable_s3             = true
+s3_bucket_name        = "scango-receipt-intelligence-artifacts-dev"
+
+lambda_additional_environment = {
+  LOG_LEVEL = "INFO"
+}
+
+tags = {
+  Owner = "nathan"
+}
