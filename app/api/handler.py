@@ -32,8 +32,10 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     try:
         logger.info("Received API Gateway event")
 
+        http_method, path = _extract_method_and_path(event)
+
         # Parse request
-        if event.get('httpMethod') == 'POST' and event.get('path') == '/v1/receipts/parse':
+        if http_method == 'POST' and path == '/v1/receipts/parse':
             return _handle_parse_request(event)
         else:
             return _create_response(404, {"error": "Not Found"})
@@ -70,6 +72,29 @@ def _handle_parse_request(event: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Error processing parse request: {str(e)}", exc_info=True)
         return _create_response(500, {"error": "Failed to process receipt"})
+
+
+def _extract_method_and_path(event: Dict[str, Any]) -> (Optional[str], Optional[str]):
+    """
+    Extract HTTP method and path supporting both REST API (v1) and HTTP API (v2) payload formats.
+    """
+    method = event.get('httpMethod')
+    path = event.get('path')
+
+    if not method or not path:
+        request_context = event.get('requestContext', {})
+        http_meta = request_context.get('http', {})
+
+        method = method or http_meta.get('method')
+        path = path or http_meta.get('path') or event.get('rawPath')
+
+    if path and request_context := event.get('requestContext', {}):
+        stage = request_context.get('stage')
+        if stage and path.startswith(f"/{stage}"):
+            # Strip stage prefix so routing works consistently
+            path = path[len(stage) + 1 :] if path != f"/{stage}" else "/"
+
+    return method, path
 
 
 def _create_response(status_code: int, body: Dict[str, Any]) -> Dict[str, Any]:
