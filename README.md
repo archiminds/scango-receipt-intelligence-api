@@ -1,140 +1,126 @@
 # ScanGo Receipt Intelligence API
 
-A production-ready serverless API for parsing OCR-extracted receipt text into structured JSON using AWS Lambda, API Gateway, DynamoDB, and Amazon Bedrock Nova.
+A production-ready serverless API that converts OCR output from consumer apps into structured, validated receipt data. The stack uses AWS API Gateway, Lambda, DynamoDB caching, and Amazon Bedrock Nova for AI-driven parsing and categorisation.
+
+## Portfolio Summary
+
+- **What it does:** Accepts raw receipt text from a mobile OCR client, invokes Bedrock Nova for parsing, validates/normalises the output, adds GST and categorisation, caches the response, and returns a clean JSON payload.
+- **Tech used:** AWS Lambda (Python 3.11), API Gateway HTTP API, DynamoDB, Amazon Bedrock Nova Pro, Terraform IaC, pytest/evaluation harness.
+- **Role of AI:** Bedrock Nova extracts vendors, dates, line items, and expense categories. Custom fallbacks (regex + heuristic normalisers) guarantee outputs even when the model is uncertain.
+- **Design highlights:** IAM SigV4-only endpoint, cache-aware service orchestration, hybrid categorisation (rules + AI), synthetic data generation plus evaluation scripts for regression testing.
 
 ## Architecture
 
-- **API Gateway**: HTTP API for REST endpoints
-- **Lambda**: Serverless compute for receipt parsing
-- **DynamoDB**: Caching and lightweight persistence with TTL
-- **Bedrock Nova**: AI-powered receipt parsing and categorization
-- **Terraform**: Infrastructure as Code
+High-level flow (OCR happens on the client/consumer app, not in this backend):
+
+1. Consumer app captures receipt, performs OCR, and sends the raw text to API Gateway.
+2. API Gateway (HTTP API) enforces AWS_IAM authentication and forwards the request to Lambda.
+3. Lambda:
+   - Preprocesses/normalises OCR text.
+   - Checks DynamoDB cache (`request_hash` partition key with TTL).
+   - Calls Amazon Bedrock Nova when cache misses.
+   - Normalises and validates the result (including GST calculations, categorisation, confidence).
+   - Stores the response in DynamoDB and returns it to the caller.
+
+```mermaid
+flowchart LR
+  A[Consumer App (OCR done here)] -->|receipt_text| B(API Gateway HTTP API)
+  B -->|SigV4| C(Lambda Receipt Service)
+  C -->|Get/Put| D[DynamoDB Cache]
+  C -->|InvokeModel| E(Amazon Bedrock Nova)
+  C -->|structured JSON| B --> A
+```
+
+### Example Input → Output
+
+**Request (POST `/v1/receipts/parse`, SigV4 signed):**
+```json
+{
+  "receipt_text": "COLES HORNSBY\nDate: 2026-04-10 09:12\nFlat White3 4.80\nSubtotal 10.20\nGST 0.93\nTOTAL 11.13",
+  "currency": "AUD",
+  "source": "mobile_ocr",
+  "metadata": {"device": "Pixel-8", "session_id": "coffee-run-0410"}
+}
+```
+
+**Response:**
+```json
+{
+  "vendor": "Coles Hornsby",
+  "receipt_date": "2026-04-10",
+  "items": [
+    {"name": "Flat White", "quantity": 3, "unit_price": "1.60", "total_price": "4.80"}
+  ],
+  "subtotal_amount": "10.20",
+  "total_amount": "11.13",
+  "gst_amount": "0.93",
+  "currency": "AUD",
+  "category": "Staff Amenities",
+  "categorization_source": "rules",
+  "cache_status": "miss",
+  "request_id": "uuid",
+  "warnings": []
+}
+```
 
 ## Features
 
-- Parse OCR receipt text into structured JSON
-- Automatic GST calculation for Australian receipts
-- Hybrid categorization (rules + AI)
-- Response caching with DynamoDB TTL
-- Comprehensive validation and error handling
-- Synthetic data generation for testing
-- Evaluation and regression testing framework
+- AWS_IAM-only HTTP API (SigV4 authentication).
+- AI-driven parsing with deterministic fallbacks for vendor/date/items.
+- GST computation tailored for Australian receipts.
+- Hybrid categorisation (rules + AI).
+- DynamoDB caching with TTL to reduce Bedrock calls.
+- Synthetic data generation + evaluation scripts for regression testing.
+- Terraform IaC for repeatable deployments.
 
-## Project Structure
+## Getting Started
 
+### Prerequisites
+- Python 3.11+
+- Terraform 1.5+
+- AWS CLI configured for the target account (no credentials are stored in this repo).
+- Bedrock Nova access already enabled in the target AWS account/region.
+
+### Installation
+```bash
+python3 -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install --upgrade pip
+pip install -r requirements.txt
+
+cp .env.example .env  # fill in real values (never commit)
 ```
-├── app/                          # Main application code
-│   ├── api/handler.py           # Lambda handler
-│   ├── services/receipt_service.py  # Core business logic
-│   └── core/                    # Core modules
-├── synthetic/                   # Synthetic data generation
-├── evaluation/                  # Evaluation and metrics
-├── tests/                       # Unit, integration, regression tests
-├── infra/terraform/             # Infrastructure as Code
-└── requirements.txt             # Python dependencies
-```
 
-## Local Setup
-
-1. **Clone and setup Python environment:**
-   ```bash
-   cd parsing-api
-   python3.11 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
-
-2. **Configure environment variables:**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your AWS credentials and settings
-   ```
-
-3. **Install Terraform:**
-   ```bash
-   # Download from https://www.terraform.io/downloads
-   terraform --version
-   ```
-
-## Deployment
-
-### 1. Deploy Infrastructure
-
+### Terraform Deploy (infrastructure + Lambda)
 ```bash
 cd infra/terraform
+cp terraform.tfvars.example terraform.tfvars  # customise locally (not committed)
 terraform init
 terraform plan
 terraform apply
 ```
 
-### 2. Package and Deploy Lambda
+The Lambda ZIP path (default `../../dist/receipt_lambda.zip`) can be generated by running `python scripts/run_custom_predictions.py` once dependencies are installed; Terraform automatically uploads the ZIP during apply.
 
+### Local Testing & Evaluation
 ```bash
-# Package the Lambda function
-cd infra/terraform
-terraform apply  # This will create the ZIP from ../app
+pytest  # runs unit/integration suites
 
-# Or manually:
-cd app
-zip -r ../infra/terraform/lambda_function.zip . -x "*.pyc" "__pycache__/*"
-```
-
-### 3. Update Lambda Environment Variables
-
-After deployment, update the Lambda function with actual values:
-- `BEDROCK_MODEL_ID`: Your Nova model ID
-- `AWS_REGION`: Your AWS region
-- `DYNAMODB_TABLE_NAME`: From Terraform output
-
-## Testing
-
-### Unit Tests
-```bash
-pytest tests/unit/
-```
-
-### Integration Tests
-```bash
-pytest tests/integration/
-```
-
-### Regression Tests
-```bash
-# Generate synthetic data
-python synthetic/generator.py
-
-# Run evaluation
-python evaluation/evaluator.py --predictions synthetic/evaluation_data.jsonl --ground-truth synthetic/evaluation_data.jsonl
-
-# Run regression test
-python evaluation/regression_runner.py --test-data synthetic/evaluation_data.jsonl --predictions synthetic/evaluation_data.jsonl
+# Generate 10-sample synthetic dataset & evaluate
+.venv/bin/python scripts/generate_custom_dataset.py
+.venv/bin/python scripts/run_custom_predictions.py
+.venv/bin/python evaluation/evaluator.py \
+  --predictions synthetic/custom_predictions.jsonl \
+  --ground-truth synthetic/custom_ground_truth.jsonl \
+  --output evaluation/custom_report.json
 ```
 
 ## API Usage
 
-### Endpoint
-```
-POST {api-endpoint}/v1/receipts/parse
-```
-
-### Authentication
-- **AWS IAM (required):** The HTTP API enforces `AWS_IAM` authorization. Every request must be SigV4-signed with credentials that have the `execute-api:Invoke` permission on the API. Unsigned calls return `403 Forbidden`.
-
-Sample IAM policy (broad):
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": "execute-api:Invoke",
-      "Resource": "*"
-    }
-  ]
-}
-```
-
-Restrictive example (replace placeholders):
+- **Endpoint:** `POST https://{api_id}.execute-api.{region}.amazonaws.com/prod/v1/receipts/parse`
+- **Auth:** SigV4 signed request with IAM role/user that has `execute-api:Invoke`.
+- **OCR:** Must happen on the client; this API expects already-extracted text.
+- **Sample IAM policy (restricted):**
 ```json
 {
   "Version": "2012-10-17",
@@ -148,119 +134,39 @@ Restrictive example (replace placeholders):
 }
 ```
 
-### Request Format
-```json
-{
-  "receipt_text": "STARBUCKS\nTotal: $5.50\nGST: $0.50",
-  "currency": "AUD",
-  "source": "app",
-  "user_id": "user123",
-  "metadata": {
-    "device": "iPhone"
-  }
-}
+## Project Structure
+
+```
+app/                    # Lambda handler + services + core modules
+scripts/                # Helper scripts (SigV4 prediction runner, dataset generator)
+synthetic/              # Synthetic dataset inputs/outputs (gitignored artifacts)
+evaluation/             # Metrics, evaluator, regression runner
+infra/terraform/        # Terraform IaC (API Gateway, Lambda, DynamoDB, IAM, optional S3)
+docs/                   # Additional documentation and diagrams
+tests/                  # Unit/integration tests
 ```
 
-### Response Format
-```json
-{
-  "vendor": "STARBUCKS",
-  "receipt_date": "2024-01-15",
-  "items": [
-    {
-      "name": "Coffee",
-      "quantity": 1,
-      "unit_price": 5.0,
-      "total_price": 5.0
-    }
-  ],
-  "subtotal_amount": 5.0,
-  "total_amount": 5.5,
-  "gst_amount": 0.5,
-  "currency": "AUD",
-  "category": "Food",
-  "categorization_source": "rules",
-  "categorization_reason": "Matched keywords: starbucks",
-  "matched_keywords": ["starbucks"],
-  "confidence_score": 0.95,
-  "cache_status": "miss",
-  "request_id": "550e8400-e29b-41d4-a716-446655440000",
-  "warnings": []
-}
-```
+## Security Notes
 
-### Sample cURL Request
-```bash
-curl -X POST "{api-endpoint}/v1/receipts/parse" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "receipt_text": "BP\nFuel: $50.00\nTotal: $50.00",
-    "currency": "AUD"
-  }'
-```
+- No AWS credentials or secrets are stored in the repository. Use `.env` / AWS profiles locally.
+- Bedrock Nova access must already be granted in the AWS account; Terraform only gives Lambda permission to invoke it.
+- GitHub secret scanning and push protection help block supported credentials from reaching the repo. When making the repo public, ensure those protections are enabled and rotate any credentials that were ever committed historically.
+- Public releases should verify `.gitignore`, `.env`, and Terraform variable hygiene (see `PUBLIC_RELEASE_CHECKLIST.md`).
 
-## Configuration
+## Evaluation & Synthetic Data
 
-### Required AWS Permissions
-- Bedrock: InvokeModel for Nova
-- DynamoDB: GetItem, PutItem, Query
-- CloudWatch: Create logs
+- `scripts/generate_custom_dataset.py` produces small sample datasets (default 10).
+- `scripts/run_custom_predictions.py` calls the deployed API via SigV4 using your AWS CLI profile and writes predictions to `synthetic/custom_predictions.jsonl`.
+- `evaluation/evaluator.py` compares predictions vs. ground truth and produces `evaluation/custom_report.json` for regression tracking.
 
-### Environment Variables
-- `AWS_REGION`: AWS region (e.g., us-east-1)
-- `BEDROCK_MODEL_ID`: Amazon Nova model ID
-- `DYNAMODB_TABLE_NAME`: Cache table name
-- `LOG_LEVEL`: Logging level (INFO, DEBUG, etc.)
+## Deployment Checklist (Summary)
 
-## Development
+- Ensure `.env` and `terraform.tfvars` are populated locally (never committed).
+- Run tests/evaluations.
+- `terraform plan/apply` to update infrastructure & Lambda.
+- Confirm API returns expected structured output with SigV4-signed curl/Postman requests.
+- Review `PUBLIC_RELEASE_CHECKLIST.md` before switching the repo to public visibility.
 
-### Adding New Categories
-Update `app/core/categorizer.py` RULES dictionary.
+## License & Attribution
 
-### Modifying GST Logic
-Update `app/core/normalizer.py` compute_gst method.
-
-### Custom Evaluation Metrics
-Extend `evaluation/metrics.py`.
-
-## Monitoring
-
-- **CloudWatch Logs**: API Gateway and Lambda logs
-- **CloudWatch Metrics**: Lambda duration, errors, invocations
-- **DynamoDB**: Cache hit rates and TTL expiration
-
-## Troubleshooting
-
-### Common Issues
-1. **Bedrock Access Denied**: Check IAM permissions and model access
-2. **DynamoDB Throttling**: Monitor read/write capacity
-3. **Lambda Timeout**: Increase timeout for complex receipts
-4. **GST Calculation Errors**: Verify Australian GST logic
-
-### Logs
-```bash
-# View Lambda logs
-aws logs tail /aws/lambda/scango-receipt-intelligence-parser --follow
-
-# View API Gateway logs
-aws logs tail /aws/apigateway/scango-receipt-intelligence-api --follow
-```
-
-## Security
-
-- API Gateway request validation
-- IAM least privilege access
-- DynamoDB TTL for data retention
-- Input sanitization and validation
-- No sensitive data logging
-
-## Contributing
-
-1. Follow the modular structure
-2. Add tests for new features
-3. Update documentation
-4. Run regression tests before PR
-
-## License
-
-[Add your license here]
+This repository contains only application logic and IaC. OCR services, AWS credentials, and Bedrock quotas are external to the project owner and must be managed separately.

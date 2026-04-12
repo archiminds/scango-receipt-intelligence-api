@@ -121,6 +121,7 @@ dmypy.json
 *.tfstate
 *.tfstate.backup
 .terraform/
+*.tfplan
 
 # AWS
 .aws/
@@ -156,3 +157,17 @@ secrets.json
 dist/
 build/
 *.zip
+*.tar.gz
+
+# Synthetic/evaluation artifacts
+synthetic/*.jsonl
+evaluation/*.json
+
+# Local env/config
+.env
+.env.*
+!.env.example
+terraform.tfvars
+!infra/terraform/terraform.tfvars.example
+.venv/
+__pycache__/
