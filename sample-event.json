@@ -1,0 +1,28 @@
+{
+  "httpMethod": "POST",
+  "path": "/v1/receipts/parse",
+  "headers": {
+    "Content-Type": "application/json",
+    "User-Agent": "PostmanRuntime/7.32.3",
+    "Accept": "*/*",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive"
+  },
+  "queryStringParameters": null,
+  "pathParameters": null,
+  "stageVariables": null,
+  "requestContext": {
+    "httpMethod": "POST",
+    "path": "/v1/receipts/parse",
+    "resourcePath": "/v1/receipts/parse",
+    "stage": "prod",
+    "identity": {
+      "sourceIp": "127.0.0.1",
+      "userAgent": "PostmanRuntime/7.32.3"
+    },
+    "requestId": "test-request-123",
+    "apiId": "test-api-id"
+  },
+  "body": "{\"receipt_text\":\"STARBUCKS\\nDate: 2024-01-15\\nCoffee\\nTotal: $5.50\\nGST: $0.50\",\"currency\":\"AUD\",\"source\":\"test\",\"user_id\":\"test-user\"}",
+  "isBase64Encoded": false
+}

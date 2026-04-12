@@ -1,0 +1,275 @@
+openapi: 3.0.3
+info:
+  title: Scan and Go Receipt Parsing API
+  version: 1.0.0
+  description: >
+    API for parsing OCR-extracted receipt text into structured expense data,
+    including GST handling, hybrid categorisation, validation, and optional
+    cache metadata.
+
+servers:
+  - url: https://api.archiminds.ai
+    description: Production
+  - url: https://api-dev.archiminds.ai
+    description: Development
+
+tags:
+  - name: Receipt Parsing
+    description: Parse OCR receipt text into structured JSON
+
+paths:
+  /v1/receipts/parse:
+    post:
+      tags:
+        - Receipt Parsing
+      summary: Parse OCR receipt text
+      description: >
+        Accepts OCR-extracted receipt text from a consumer application,
+        extracts structured fields, computes GST when not explicitly present,
+        categorises the expense using hybrid logic (rules first, AI for ambiguous
+        cases), validates the output, and returns structured JSON.
+      operationId: parseReceipt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParseReceiptRequest'
+            examples:
+              basic:
+                summary: Basic OCR text request
+                value:
+                  receipt_text: |
+                    WOOLWORTHS
+                    MILK 4.50
+                    BREAD 3.20
+                    TOTAL 7.70
+                  source: mobile_ocr
+                  currency: AUD
+      responses:
+        '200':
+          description: Receipt parsed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParseReceiptResponse'
+              examples:
+                success:
+                  summary: Parsed grocery receipt
+                  value:
+                    request_id: "3b7a2a4d-6f9f-47f1-8c68-6d0b49f1a111"
+                    status: success
+                    cache_status: miss
+                    parsed_receipt:
+                      vendor: Woolworths
+                      receipt_date: "2026-04-12"
+                      items:
+                        - description: Milk
+                          amount: 4.50
+                        - description: Bread
+                          amount: 3.20
+                      subtotal_amount: 7.00
+                      gst_amount: 0.70
+                      total_amount: 7.70
+                      currency: AUD
+                      category: Staff Amenities
+                      categorization_source: rule
+                      categorization_reason: Vendor matched staff amenities rule.
+                      matched_keywords:
+                        - woolworths
+                    warnings: []
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                badRequest:
+                  value:
+                    code: INVALID_REQUEST
+                    message: receipt_text is required
+                    details:
+                      field: receipt_text
+        '422':
+          description: Unable to produce a valid parsed response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unprocessable:
+                  value:
+                    code: PARSING_VALIDATION_FAILED
+                    message: Parsed receipt did not pass validation
+                    details:
+                      reason: total_amount missing
+        '500':
+          description: Internal processing error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ParseReceiptRequest:
+      type: object
+      required:
+        - receipt_text
+      properties:
+        receipt_text:
+          type: string
+          description: OCR-extracted text from the receipt
+          minLength: 1
+        source:
+          type: string
+          description: Source of OCR text
+          enum:
+            - mobile_ocr
+            - web_ocr
+            - manual_entry
+            - batch_import
+          default: mobile_ocr
+        currency:
+          type: string
+          description: Expected currency code
+          example: AUD
+          default: AUD
+        user_id:
+          type: string
+          description: Optional consumer user identifier
+        metadata:
+          type: object
+          description: Optional client metadata
+          additionalProperties: true
+
+    ParseReceiptResponse:
+      type: object
+      required:
+        - request_id
+        - status
+        - cache_status
+        - parsed_receipt
+        - warnings
+      properties:
+        request_id:
+          type: string
+          description: Unique request identifier
+        status:
+          type: string
+          enum:
+            - success
+            - partial_success
+        cache_status:
+          type: string
+          description: Indicates whether response came from cache
+          enum:
+            - hit
+            - miss
+        parsed_receipt:
+          $ref: '#/components/schemas/ParsedReceipt'
+        warnings:
+          type: array
+          items:
+            type: string
+
+    ParsedReceipt:
+      type: object
+      required:
+        - vendor
+        - items
+        - gst_amount
+        - total_amount
+        - currency
+        - category
+        - categorization_source
+      properties:
+        vendor:
+          type: string
+          nullable: true
+        receipt_date:
+          type: string
+          format: date
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReceiptItem'
+        subtotal_amount:
+          type: number
+          format: float
+          nullable: true
+          description: Amount before GST where derivable
+        gst_amount:
+          type: number
+          format: float
+          description: >
+            GST amount. If not explicitly present in receipt text, it is computed
+            deterministically by the service.
+        total_amount:
+          type: number
+          format: float
+        currency:
+          type: string
+          example: AUD
+        category:
+          type: string
+          enum:
+            - Car
+            - Travel
+            - Utilities
+            - Equipment
+            - Food
+            - Staff Amenities
+            - Office Supplies
+            - Accounting Fee
+            - Operational Cost
+            - Unclassified
+        categorization_source:
+          type: string
+          description: Whether category came from deterministic rules or AI
+          enum:
+            - rule
+            - ai
+            - fallback
+        categorization_reason:
+          type: string
+          nullable: true
+        matched_keywords:
+          type: array
+          items:
+            type: string
+          description: Keywords or clues that influenced categorisation
+        confidence_score:
+          type: number
+          format: float
+          nullable: true
+          minimum: 0
+          maximum: 1
+
+    ReceiptItem:
+      type: object
+      required:
+        - description
+      properties:
+        description:
+          type: string
+        amount:
+          type: number
+          format: float
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true

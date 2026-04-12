@@ -1,0 +1,227 @@
+openapi: 3.0.3
+info:
+  title: ScanGo Receipt Intelligence API
+  version: 1.0.0
+  description: API for parsing OCR-extracted receipt text into structured JSON
+
+servers:
+  - url: https://your-api-id.execute-api.us-east-1.amazonaws.com/prod
+    description: Production server
+
+paths:
+  /v1/receipts/parse:
+    post:
+      summary: Parse receipt text
+      description: Parse OCR-extracted receipt text into structured JSON with GST calculation and categorization
+      operationId: parseReceipt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReceiptParseRequest'
+            example:
+              receipt_text: "STARBUCKS\nTotal: $5.50\nGST: $0.50"
+              currency: "AUD"
+              source: "app"
+              user_id: "user123"
+      responses:
+        '200':
+          description: Successful receipt parsing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceiptParseResponse'
+              example:
+                vendor: "STARBUCKS"
+                receipt_date: "2024-01-15"
+                items: []
+                subtotal_amount: 5.0
+                total_amount: 5.5
+                gst_amount: 0.5
+                currency: "AUD"
+                category: "Food"
+                categorization_source: "rules"
+                categorization_reason: "Matched keywords: starbucks"
+                matched_keywords: ["starbucks"]
+                confidence_score: 0.95
+                cache_status: "miss"
+                request_id: "550e8400-e29b-41d4-a716-446655440000"
+                warnings: []
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ReceiptParseRequest:
+      type: object
+      required:
+        - receipt_text
+      properties:
+        receipt_text:
+          type: string
+          description: OCR-extracted receipt text
+          example: "STARBUCKS\nTotal: $5.50\nGST: $0.50"
+        currency:
+          type: string
+          description: Currency code (defaults to AUD)
+          default: "AUD"
+          example: "AUD"
+        source:
+          type: string
+          description: Source of the receipt
+          example: "app"
+        user_id:
+          type: string
+          description: User identifier
+          example: "user123"
+        metadata:
+          type: object
+          description: Additional metadata
+          additionalProperties: true
+
+    ReceiptParseResponse:
+      type: object
+      required:
+        - category
+        - confidence_score
+        - cache_status
+        - request_id
+      properties:
+        vendor:
+          type: string
+          nullable: true
+          description: Extracted vendor/store name
+          example: "STARBUCKS"
+        receipt_date:
+          type: string
+          format: date
+          nullable: true
+          description: Receipt date in YYYY-MM-DD format
+          example: "2024-01-15"
+        items:
+          type: array
+          description: Parsed receipt items
+          items:
+            $ref: '#/components/schemas/ParsedItem'
+        subtotal_amount:
+          type: number
+          format: decimal
+          nullable: true
+          description: Subtotal amount before GST
+          example: 5.0
+        total_amount:
+          type: number
+          format: decimal
+          nullable: true
+          description: Total amount including GST
+          example: 5.5
+        gst_amount:
+          type: number
+          format: decimal
+          nullable: true
+          description: GST amount (always computed for AUD)
+          example: 0.5
+        currency:
+          type: string
+          description: Currency code
+          example: "AUD"
+        category:
+          type: string
+          description: Expense category
+          enum:
+            - Car
+            - Travel
+            - Utilities
+            - Equipment
+            - Food
+            - Staff Amenities
+            - Office Supplies
+            - Accounting Fee
+            - Operational Cost
+            - Unclassified
+          example: "Food"
+        categorization_source:
+          type: string
+          description: How categorization was determined
+          enum: [rules, ai]
+          example: "rules"
+        categorization_reason:
+          type: string
+          description: Explanation of categorization
+          example: "Matched keywords: starbucks"
+        matched_keywords:
+          type: array
+          description: Keywords that matched for categorization
+          items:
+            type: string
+          example: ["starbucks"]
+        confidence_score:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Overall confidence score
+          example: 0.95
+        cache_status:
+          type: string
+          description: Cache hit/miss status
+          enum: [hit, miss]
+          example: "miss"
+        request_id:
+          type: string
+          description: Unique request identifier
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        warnings:
+          type: array
+          description: Validation warnings
+          items:
+            type: string
+          example: []
+
+    ParsedItem:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Item name
+          example: "Coffee"
+        quantity:
+          type: integer
+          description: Item quantity
+          default: 1
+          example: 1
+        unit_price:
+          type: number
+          format: decimal
+          nullable: true
+          description: Unit price per item
+          example: 5.0
+        total_price:
+          type: number
+          format: decimal
+          nullable: true
+          description: Total price for this item
+          example: 5.0
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Invalid JSON in request body"

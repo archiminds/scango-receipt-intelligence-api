@@ -1,0 +1,1071 @@
+{
+  "overall_score": 1.0,
+  "field_scores": {
+    "vendor": 1.0,
+    "receipt_date": 1.0,
+    "total_amount": 1.0,
+    "gst_amount": 1.0,
+    "subtotal_amount": 1.0,
+    "items": 1.0,
+    "currency": 1.0,
+    "category": 1.0
+  },
+  "individual_scores": [
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    },
+    {
+      "vendor": 1.0,
+      "receipt_date": 1.0,
+      "total_amount": 1.0,
+      "gst_amount": 1.0,
+      "subtotal_amount": 1.0,
+      "items": 1.0,
+      "currency": 1.0,
+      "category": 1.0
+    }
+  ],
+  "total_samples": 100,
+  "error_analysis": {
+    "field_error_rates": {
+      "vendor": 0.0,
+      "receipt_date": 0.0,
+      "total_amount": 0.0,
+      "gst_amount": 0.0,
+      "subtotal_amount": 0.0,
+      "items": 0.0,
+      "currency": 0.0,
+      "category": 0.0
+    },
+    "common_failures": []
+  },
+  "confidence_intervals": {
+    "vendor": {
+      "mean": 1.0,
+      "ci_lower": 1.0,
+      "ci_upper": 1
+    },
+    "receipt_date": {
+      "mean": 1.0,
+      "ci_lower": 1.0,
+      "ci_upper": 1
+    },
+    "total_amount": {
+      "mean": 1.0,
+      "ci_lower": 1.0,
+      "ci_upper": 1
+    },
+    "gst_amount": {
+      "mean": 1.0,
+      "ci_lower": 1.0,
+      "ci_upper": 1
+    },
+    "subtotal_amount": {
+      "mean": 1.0,
+      "ci_lower": 1.0,
+      "ci_upper": 1
+    },
+    "items": {
+      "mean": 1.0,
+      "ci_lower": 1.0,
+      "ci_upper": 1
+    },
+    "currency": {
+      "mean": 1.0,
+      "ci_lower": 1.0,
+      "ci_upper": 1
+    },
+    "category": {
+      "mean": 1.0,
+      "ci_lower": 1.0,
+      "ci_upper": 1
+    }
+  }
+}

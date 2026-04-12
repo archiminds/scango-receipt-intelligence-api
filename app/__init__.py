@@ -1,0 +1,1 @@
+# ScanGo Receipt Intelligence API Package
