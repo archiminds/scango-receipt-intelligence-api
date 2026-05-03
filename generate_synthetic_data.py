@@ -2,6 +2,9 @@
 """
 Generate large synthetic receipt dataset for training and evaluation.
 Creates 1000+ synthetic receipts with OCR noise injection and golden dataset support.
+
+Use this when refreshing broad local datasets. For the smaller deployed API
+smoke-test flow, use scripts/generate_custom_dataset.py instead.
 """
 
 import sys
@@ -45,7 +48,8 @@ def main():
     generator.save_dataset(eval_data, str(eval_file), format_type='jsonl')
     print(f"   ✓ Saved {len(eval_data)} evaluation samples to {eval_file}")
 
-    # Generate golden dataset (100 samples, perfect quality)
+    # Generate golden dataset (100 samples, perfect quality). This is useful
+    # when debugging parser behavior without OCR noise as a confounding factor.
     print("3. Generating golden dataset (100 samples)...")
     golden_data = generator.generate_dataset(
         size=100,

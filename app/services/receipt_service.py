@@ -1,3 +1,11 @@
+"""Receipt parsing workflow orchestration.
+
+ReceiptService is the application's central use case. It intentionally keeps
+the end-to-end flow in one place: validate input, clean OCR text, reuse cached
+results, call Bedrock on misses, normalize/fallback, categorize, validate, and
+cache the final response.
+"""
+
 import logging
 import os
 import time
@@ -64,18 +72,23 @@ class ReceiptService:
         logger.info(f"Processing receipt parse request: {request_id}")
 
         try:
-            # Step 1: Validate request
+            # Step 1: Validate application-level requirements that go beyond
+            # the Pydantic model, keeping API and service validation aligned.
             self._validate_request(request)
 
-            # Step 2: Clean and normalize OCR text
+            # Step 2: Keep two versions of the text:
+            # - cleaned_text goes to Bedrock so useful symbols/casing remain.
+            # - normalized_text is stable for hashing/cache lookups.
             cleaned_text = Preprocessor.clean_text(request.receipt_text)
             normalized_text = Preprocessor.normalize_text(cleaned_text)
             logger.debug(f"Preprocessed text for request {request_id}")
 
-            # Step 3: Generate hash for caching
+            # Step 3: Hash normalized text so whitespace/case differences do
+            # not cause unnecessary Bedrock calls.
             text_hash = Postprocessor.hash_text(normalized_text)
 
-            # Step 4: Check cache
+            # Step 4: Cache hits return immediately and get a fresh request_id
+            # so every API call remains traceable even if the payload is reused.
             cached_response = self._check_cache(text_hash)
             if cached_response:
                 logger.info(f"Cache hit for request: {request_id}")
@@ -83,7 +96,9 @@ class ReceiptService:
                 cached_response.request_id = request_id
                 return cached_response
 
-            # Step 5: Parse with Bedrock
+            # Step 5: Bedrock is the preferred parser because it can infer
+            # structure from messy OCR. The regex parser below keeps the API
+            # useful if Bedrock is unavailable or returns invalid JSON.
             logger.info(f"Cache miss, parsing with AI for request: {request_id}")
             bedrock_request = BedrockParseRequest(
                 receipt_text=cleaned_text,
@@ -101,17 +116,21 @@ class ReceiptService:
                 logger.warning(f"Bedrock parsing failed for request {request_id}: {e}, using fallback")
                 parsed_data = Parser.extract_key_fields(cleaned_text)
 
-            # Step 6: Normalize extracted values
+            # Step 6: Convert Bedrock/fallback output into canonical Decimal,
+            # ISO-date, title-cased vendor, and ParsedItem forms.
             normalized_data = self._normalize_parsed_data(parsed_data, request.currency, cleaned_text)
             logger.debug(f"Normalized data for request {request_id}")
 
-            # Step 7: Compute GST if missing
+            # Step 7: Australian GST is included in the total. If missing, use
+            # total * 10/110 rather than subtotal * 10%.
             normalized_data['gst_amount'] = Normalizer.compute_gst(
                 normalized_data.get('total_amount'),
                 normalized_data.get('gst_amount')
             )
 
-            # Step 8: Categorize
+            # Step 8: Categorization is rules-first. AI categorization is
+            # intentionally secondary because deterministic keyword matches are
+            # cheaper, faster, and easier to audit for handover.
             categorization = self.categorizer.categorize(
                 normalized_data.get('vendor'),
                 normalized_data.get('items', []),
@@ -119,7 +138,9 @@ class ReceiptService:
             )
             logger.debug(f"Categorized receipt for request {request_id}: {categorization.category}")
 
-            # Step 9: Build response
+            # Step 9: Build the public response object. Validation warnings are
+            # added later so callers receive partial results instead of a hard
+            # failure for non-critical extraction issues.
             response = ReceiptParseResponse(
                 vendor=normalized_data.get('vendor'),
                 receipt_date=normalized_data.get('receipt_date'),
@@ -138,18 +159,21 @@ class ReceiptService:
                 warnings=[]
             )
 
-            # Step 10: Validate
+            # Step 10: Validation returns warnings; it does not reject the
+            # response unless upstream model construction already failed.
             warnings = Validator.validate_response(response)
             response.warnings = warnings
             if warnings:
                 logger.warning(f"Validation warnings for request {request_id}: {warnings}")
 
-            # Step 11: Finalize response
+            # Step 11: Finalization recalculates the overall confidence score
+            # from all extracted fields and stamps request/cache metadata.
             final_response = Postprocessor.finalize_response(
                 response, request_id, 'miss', warnings
             )
 
-            # Step 12: Cache result
+            # Step 12: Cache only the finalized response so future callers get
+            # the same normalized/validated shape.
             self._save_to_cache(text_hash, normalized_text, final_response)
 
             logger.info(f"Successfully processed request: {request_id}")
@@ -157,7 +181,8 @@ class ReceiptService:
 
         except DynamoDBCacheError as e:
             logger.error(f"Cache error for request {request_id}: {e}")
-            # Continue without caching, but don't fail the request
+            # Continue without caching, but don't fail the request. Parsing is
+            # more important than cache availability.
             logger.warning(f"Continuing without caching due to cache error: {e}")
             return self._create_error_response(request_id, f"Cache error: {e}")
         except ValueError as e:
@@ -265,11 +290,16 @@ class ReceiptService:
         gst_amount = Normalizer.normalize_amount(parsed_data.get('gst_amount'))
 
         if subtotal_amount is None and items:
+            # Reconstruct subtotal from line items when Bedrock/fallback found
+            # item prices but did not provide a subtotal.
             subtotal_amount = sum(
                 (item.total_price or Decimal('0.00')) for item in items
             ).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) if items else None
 
         if total_amount is None and subtotal_amount is not None:
+            # Some receipts only expose item/subtotal information. Treat the
+            # subtotal as total so downstream GST/category validation can still
+            # return a useful response.
             total_amount = subtotal_amount
 
         return {

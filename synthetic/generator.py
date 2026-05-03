@@ -1,3 +1,10 @@
+"""High-level synthetic receipt dataset generator.
+
+This module combines scenario definitions, receipt templates, OCR noise, and
+formatter utilities to create repeatable datasets for training, evaluation, and
+regression testing.
+"""
+
 import random
 import json
 from typing import List, Dict, Any, Optional
@@ -12,6 +19,8 @@ class SyntheticDataGenerator:
 
     def __init__(self, seed: Optional[int] = None):
         if seed:
+            # A seed makes generated datasets reproducible, which is critical
+            # when comparing parser accuracy before and after code changes.
             random.seed(seed)
 
     def generate_dataset(self, size: int = 1000,
@@ -25,14 +34,18 @@ class SyntheticDataGenerator:
             scenarios = ScenarioDefinitions.get_all_scenarios()
 
         if include_ambiguous:
+            # Ambiguous scenarios exercise category rules where the same vendor
+            # or keyword could reasonably map to more than one expense class.
             scenarios.extend(ScenarioDefinitions.get_ambiguous_scenarios())
 
         for _ in range(size):
-            # Select random scenario
+            # Select a scenario first, then ask ScenarioDefinitions to fill in
+            # realistic vendor, item, amount, GST, and date values.
             scenario = random.choice(scenarios)
             receipt_data = ScenarioDefinitions.generate_scenario_data(scenario)
 
-            # Generate receipt text
+            # Generate clean receipt text before adding synthetic OCR noise so
+            # we can keep both the parser input and the expected answer.
             receipt_text = ReceiptTemplates.generate_receipt_text(
                 receipt_data['vendor'],
                 receipt_data['category'],
@@ -47,11 +60,13 @@ class SyntheticDataGenerator:
                 iso_date_line = f"Date: {receipt_data['date']}"
                 receipt_text = f"{iso_date_line}\n{receipt_text}"
 
-            # Add noise
+            # Add OCR/layout noise after generating the golden text. The noisy
+            # text simulates what a mobile OCR layer might send to the API.
             noisy_text = NoiseGenerator.add_ocr_noise(receipt_text, noise_level)
             noisy_text = NoiseGenerator.add_layout_noise(noisy_text)
 
-            # Format for dataset
+            # Store both input and expected output in each row so the evaluator
+            # can score predictions field by field.
             data_point = {
                 'receipt_text': noisy_text,
                 'clean_text': receipt_text,

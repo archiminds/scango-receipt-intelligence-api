@@ -1,3 +1,10 @@
+"""Validation rules for parsed receipt responses.
+
+Validation returns warnings rather than raising for most issues. The API is
+designed to return the best available structured result even when extraction is
+partial or internally inconsistent.
+"""
+
 from typing import List
 from decimal import Decimal
 from app.models.schemas import ReceiptParseResponse, ParsedItem
@@ -11,7 +18,8 @@ class Validator:
         """Validate the complete response and return list of warnings."""
         warnings = []
 
-        # Check required fields
+        # Check response-level fields that should always exist after service
+        # processing.
         if not response.category:
             warnings.append("Category is missing")
 
@@ -83,7 +91,8 @@ class Validator:
             if item.total_price is not None and item.total_price < 0:
                 warnings.append(f"Item {i+1} has negative total price")
 
-            # Check if unit_price * quantity ≈ total_price
+            # Check if unit_price * quantity approximately equals total_price.
+            # A one-cent tolerance avoids false warnings from decimal rounding.
             if (item.unit_price is not None and item.quantity is not None
                 and item.total_price is not None):
                 expected_total = item.unit_price * item.quantity

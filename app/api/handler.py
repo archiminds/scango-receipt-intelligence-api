@@ -1,3 +1,10 @@
+"""AWS Lambda entry point for the receipt parsing HTTP API.
+
+API Gateway owns authentication and routing at the infrastructure layer. This
+module only translates API Gateway's event payload into a validated application
+request and serializes the application response back into API Gateway format.
+"""
+
 import json
 import logging
 import os
@@ -32,9 +39,12 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     try:
         logger.info("Received API Gateway event")
 
+        # Support both API Gateway REST API (v1) and HTTP API (v2) event shapes
+        # so local samples/tests and the deployed HTTP API can share the handler.
         http_method, path = _extract_method_and_path(event)
 
-        # Parse request
+        # Keep routing intentionally small: this Lambda currently exposes one
+        # business operation and returns 404 for everything else.
         if http_method == 'POST' and path == '/v1/receipts/parse':
             return _handle_parse_request(event)
         else:
@@ -48,7 +58,8 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 def _handle_parse_request(event: Dict[str, Any]) -> Dict[str, Any]:
     """Handle POST /v1/receipts/parse request."""
     try:
-        # Parse request body
+        # API Gateway can deliver binary-safe payloads as base64. The client
+        # sends JSON, so decode before validating the request model.
         body = event.get('body', '{}')
         if event.get('isBase64Encoded'):
             import base64
@@ -56,10 +67,12 @@ def _handle_parse_request(event: Dict[str, Any]) -> Dict[str, Any]:
 
         request_data = json.loads(body)
 
-        # Validate and create request object
+        # Pydantic performs shape validation and basic field normalization
+        # before the service sees the request.
         parse_request = ReceiptParseRequest(**request_data)
 
-        # Get service and process the request
+        # The service instance is cached globally to reduce Lambda cold-start
+        # overhead for expensive boto3 clients.
         service = get_receipt_service()
         response = service.parse_receipt(parse_request)
 
@@ -90,7 +103,8 @@ def _extract_method_and_path(event: Dict[str, Any]) -> (Optional[str], Optional[
     if path and request_context:
         stage = request_context.get('stage')
         if stage and path.startswith(f"/{stage}"):
-            # Strip stage prefix so routing works consistently
+            # Strip the deployed stage prefix so the route comparison works for
+            # both local events (/v1/...) and deployed URLs (/prod/v1/...).
             path = path[len(stage) + 1 :] if path != f"/{stage}" else "/"
 
     return method, path
@@ -104,6 +118,8 @@ def _create_response(status_code: int, body: Dict[str, Any]) -> Dict[str, Any]:
             "Content-Type": "application/json",
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "POST, OPTIONS",
+            # X-Api-Key is allowed for browser preflight compatibility only.
+            # Authorization is still enforced by API Gateway AWS_IAM/SigV4.
             "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token"
         },
         "body": json.dumps(body, default=str)  # Handle Decimal serialization

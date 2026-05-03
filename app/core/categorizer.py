@@ -1,3 +1,10 @@
+"""Receipt expense categorization.
+
+The categorizer uses deterministic keyword rules first and only falls back to
+AI for ambiguous cases. This keeps common categories cheap, explainable, and
+stable for regression tests.
+"""
+
 import re
 import logging
 from typing import List, Optional, Dict, Any
@@ -55,7 +62,8 @@ class Categorizer:
     def categorize(self, vendor: Optional[str], items: List[Any],
                   receipt_text: str) -> CategorizationResult:
         """Main categorization method using hybrid approach."""
-        # Handle both dict and ParsedItem objects
+        # Receipt items may arrive as Pydantic ParsedItem objects from the main
+        # service or as dictionaries in tests/synthetic data.
         item_names = []
         for item in items:
             if hasattr(item, 'name'):
@@ -67,7 +75,9 @@ class Categorizer:
 
         text_to_analyze = f"{vendor or ''} {' '.join(item_names)} {receipt_text}".lower()
 
-        # Try rule-based categorization first
+        # Try rule-based categorization first. A high-confidence rules result is
+        # returned immediately because it is auditable and avoids another model
+        # call.
         rule_result = self._categorize_by_rules(text_to_analyze)
         fallback_rule_result = None
         if rule_result:
@@ -75,7 +85,9 @@ class Categorizer:
             if rule_result.confidence >= 0.8:
                 return rule_result
 
-        # If rules are ambiguous, use AI
+        # If rules are ambiguous, use AI. The current implementation returns an
+        # unclassified placeholder, so the fallback rule result below remains
+        # important.
         if self.bedrock_client:
             ai_result = self._categorize_by_ai(vendor, items, receipt_text)
             if ai_result and ai_result.category.lower() != 'unclassified':
@@ -84,7 +96,8 @@ class Categorizer:
         if fallback_rule_result:
             return fallback_rule_result
 
-        # Fallback to Unclassified
+        # Fallback to Unclassified when neither rules nor AI produce a useful
+        # category. This avoids fabricating a confident business category.
         return CategorizationResult(
             category='Unclassified',
             source='fallback',
@@ -108,11 +121,14 @@ class Categorizer:
         if not matches:
             return None
 
-        # Find category with most matches
+        # Find category with the most keyword evidence. Ties use dict order,
+        # which is stable in modern Python but should not be treated as a
+        # business rule.
         best_category = max(matches.keys(), key=lambda c: len(matches[c]))
         matched_keywords = matches[best_category]
 
-        # Calculate confidence based on number of matches
+        # Confidence is intentionally simple: more independent keyword matches
+        # increase confidence up to 1.0.
         confidence = min(len(matched_keywords) * 0.3, 1.0)
 
         return CategorizationResult(

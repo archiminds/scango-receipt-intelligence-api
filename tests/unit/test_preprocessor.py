@@ -1,3 +1,9 @@
+"""Unit tests for text preprocessing behavior.
+
+These tests protect the cache-key and parser-input normalization assumptions
+used by ReceiptService.
+"""
+
 import pytest
 from app.core.preprocessor import Preprocessor
 

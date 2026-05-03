@@ -1,3 +1,9 @@
+"""Integration-style tests for the receipt service workflow.
+
+The tests exercise the service orchestration while replacing Bedrock calls so
+local test runs do not require network access or AWS model permissions.
+"""
+
 import pytest
 import json
 from app.services.receipt_service import ReceiptService
@@ -19,7 +25,8 @@ class TestReceiptServiceIntegration:
             currency="AUD"
         )
 
-        # Mock the Bedrock client to avoid actual API calls
+        # Mock the Bedrock client to avoid actual API calls and force the
+        # fallback parser path.
         service.bedrock_client.parse_receipt = lambda x: None  # Return None to test fallback
 
         response = service.parse_receipt(request)
@@ -36,7 +43,8 @@ class TestReceiptServiceIntegration:
             currency="AUD"
         )
 
-        # Mock Bedrock to return data without GST
+        # Mock Bedrock to return data without GST so the normalizer's Australian
+        # GST-inclusive calculation is exercised.
         mock_response = type('MockResponse', (), {
             'vendor': 'COFFEE SHOP',
             'receipt_date': None,
@@ -68,7 +76,8 @@ class TestReceiptServiceIntegration:
             currency="AUD"
         )
 
-        # Mock Bedrock to return data
+        # Mock Bedrock to return data. This keeps the test focused on service
+        # behavior rather than the external Bedrock client.
         mock_response = type('MockResponse', (), {
             'vendor': 'TEST VENDOR',
             'receipt_date': None,

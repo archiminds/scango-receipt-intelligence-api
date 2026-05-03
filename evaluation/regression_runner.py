@@ -1,3 +1,10 @@
+"""Regression testing for receipt parsing accuracy.
+
+RegressionRunner compares current evaluation results with a saved baseline and
+flags meaningful drops. This protects parser/category changes from silently
+reducing quality.
+"""
+
 import json
 import logging
 import time
@@ -22,7 +29,8 @@ class RegressionRunner:
         """Run regression test and compare against baseline."""
         logger.info(f"Running regression test: {test_name}")
 
-        # Load ground truth
+        # Load ground truth from the test dataset and evaluate the supplied
+        # predictions against it.
         ground_truth = self._load_test_data()
 
         # Create evaluator
@@ -33,12 +41,12 @@ class RegressionRunner:
         # Run evaluation
         results = evaluator.evaluate()
 
-        # Save results
+        # Save timestamped results for history, even when no regression occurs.
         timestamp = int(time.time())
         result_file = self.results_dir / f"{test_name}_{timestamp}.json"
         evaluator.save_report(results, str(result_file))
 
-        # Check for regressions
+        # Check current results against the baseline for this named test.
         regression_check = self._check_regression(results, test_name)
 
         return {
@@ -85,7 +93,8 @@ class RegressionRunner:
                 'changes': {}
             }
 
-        # Compare scores
+        # Compare scores with a fixed tolerance. A 5% drop is treated as
+        # meaningful enough to investigate.
         changes = {}
         has_regression = False
         regression_threshold = 0.05  # 5% drop

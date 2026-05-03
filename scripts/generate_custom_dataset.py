@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Generate a small synthetic dataset plus ground-truth outputs."""
+"""Generate a small synthetic dataset plus ground-truth outputs.
+
+This script is intended for quick deployed-API accuracy checks. It writes both
+the parser input samples and the ground truth that evaluation.evaluator uses.
+"""
 
 import json
 import sys
@@ -18,6 +22,8 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
 
     generator = SyntheticDataGenerator(seed=42)
+    # Keep the custom dataset intentionally small so a live API prediction run
+    # is fast and does not create unnecessary Bedrock cost.
     dataset = generator.generate_dataset(size=10)
 
     dataset_path = output_dir / "custom_dataset.jsonl"
@@ -26,6 +32,8 @@ def main():
     ground_truth_path = output_dir / "custom_ground_truth.jsonl"
     with ground_truth_path.open("w") as f:
         for entry in dataset:
+            # Ground truth files contain only expected outputs. request_id is
+            # added so reports can correlate results even when samples move.
             gt = entry["expected_output"].copy()
             gt["request_id"] = (
                 entry.get("request_id")

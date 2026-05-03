@@ -1,3 +1,10 @@
+"""Receipt text templates and category-specific vendor/item pools.
+
+Templates produce realistic but deterministic-enough source receipts for the
+synthetic generator. Scenario definitions choose categories and item counts;
+this module supplies plausible names, prices, and rendered text.
+"""
+
 from typing import Dict, List, Any
 import random
 from datetime import datetime, timedelta
@@ -68,6 +75,8 @@ class ReceiptTemplates:
     def generate_receipt_text(vendor: str, category: str, items: List[Dict[str, Any]],
                             total: float, gst: float, date: str) -> str:
         """Generate realistic receipt text."""
+        # Keep the rendered format simple and consistent. Noise injection is
+        # handled separately so we can also preserve this clean source text.
         lines = [
             vendor.upper(),
             f"Date: {date}",
@@ -103,6 +112,8 @@ class ReceiptTemplates:
 
         result = []
         for item in selected:
+            # Prices are rounded at generation time so expected outputs match
+            # receipt text and evaluator comparisons.
             price = random.uniform(*item['price_range'])
             result.append({
                 'name': item['name'],

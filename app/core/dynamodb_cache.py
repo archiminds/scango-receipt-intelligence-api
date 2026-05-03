@@ -1,3 +1,10 @@
+"""DynamoDB-backed cache for parsed receipt responses.
+
+The cache stores finalized API responses by a hash of normalized receipt text.
+This avoids repeated Bedrock calls for identical receipts while keeping the
+cache independent from caller-specific metadata.
+"""
+
 import boto3
 import json
 import logging
@@ -57,13 +64,16 @@ class DynamoDBCacheClient:
 
             if 'Item' in response:
                 item = response['Item']
-                # Check if TTL has expired
+                # DynamoDB TTL deletion is asynchronous, so check expiry in the
+                # application before trusting a returned item.
                 ttl = int(item.get('ttl', {}).get('N', 0))
                 current_time = int(time.time())
 
                 if current_time < ttl:
                     logger.debug(f"Cache hit for request_hash: {request_hash}")
-                    # Deserialize the cached response
+                    # Cached responses are stored as JSON strings because the
+                    # nested Decimal/list structure is simpler to round-trip
+                    # through the existing Pydantic response schema.
                     response_data = json.loads(item['response']['S'])
                     # Convert back to ReceiptParseResponse
                     from app.models.schemas import ReceiptParseResponse
@@ -111,7 +121,8 @@ class DynamoDBCacheClient:
         try:
             logger.debug(f"Saving cache entry for request_hash: {cache_entry.request_hash}")
 
-            # Serialize the response
+            # Serialize the response before writing because low-level boto3
+            # DynamoDB clients require explicit attribute types.
             response_json = json.dumps(cache_entry.response, default=str)
 
             self.dynamodb.put_item(

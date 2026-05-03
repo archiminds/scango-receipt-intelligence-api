@@ -1,3 +1,10 @@
+"""Accuracy metrics for receipt parser evaluation.
+
+Each field has a scoring function tuned to its data type: text similarity for
+names/categories, tolerance bands for amounts, flexible date matching, and
+best-match scoring for items.
+"""
+
 import re
 from typing import Dict, List, Any, Optional
 from decimal import Decimal, ROUND_HALF_UP
@@ -10,6 +17,8 @@ class EvaluationMetrics:
     @staticmethod
     def calculate_accuracy(predicted: Any, expected: Any, field: str) -> float:
         """Calculate accuracy for a specific field."""
+        # Dispatch by field so the evaluator can produce comparable 0..1 scores
+        # even though receipt fields have very different data types.
         if field in ['vendor', 'category']:
             return EvaluationMetrics._text_similarity(predicted or '', expected or '')
 
@@ -61,7 +70,8 @@ class EvaluationMetrics:
             except:
                 return 0.0
 
-        # Exact match
+        # Exact match gets full credit; near misses get partial credit so small
+        # rounding differences do not look the same as completely wrong totals.
         if predicted == expected:
             return 1.0
 
@@ -122,7 +132,8 @@ class EvaluationMetrics:
         total_score = 0.0
         max_items = max(len(predicted_items), len(expected_items))
 
-        # Simple matching based on name similarity
+        # Simple best-match scoring handles item order changes without requiring
+        # a complex assignment algorithm.
         for pred_item in predicted_items:
             best_match = 0.0
             for exp_item in expected_items:
@@ -197,7 +208,8 @@ class EvaluationMetrics:
                     field_scores[field] = []
                 field_scores[field].append(score)
 
-        # Calculate averages
+        # Calculate field averages first, then combine them into a weighted
+        # overall score based on business importance.
         avg_scores = {}
         for field, scores in field_scores.items():
             avg_scores[field] = sum(scores) / len(scores)

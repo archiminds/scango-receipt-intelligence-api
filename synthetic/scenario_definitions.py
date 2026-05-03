@@ -1,3 +1,10 @@
+"""Synthetic receipt scenario catalog.
+
+Scenarios define the business category, item count, and complexity used by the
+generator. They are the easiest place to add new coverage for categories or
+edge cases.
+"""
+
 from typing import Dict, List, Any
 import random
 from synthetic.templates import ReceiptTemplates
@@ -117,6 +124,8 @@ class ScenarioDefinitions:
     def generate_scenario_data(scenario_name: str) -> Dict[str, Any]:
         """Generate data for a specific scenario."""
         if scenario_name in ScenarioDefinitions.AMBIGUOUS_SCENARIOS:
+            # Ambiguous scenarios use explicit vendors/items so the evaluator can
+            # test categorization cases where simple keywords overlap.
             scenario_data = ScenarioDefinitions.AMBIGUOUS_SCENARIOS[scenario_name].copy()
             
             # Convert string items to proper item format
@@ -131,7 +140,8 @@ class ScenarioDefinitions:
                     items.append({'name': item_name, 'price': price})
                 scenario_data['items'] = items
             
-            # Calculate totals
+            # Calculate totals from generated item prices so the expected
+            # output remains internally consistent.
             subtotal = sum(item['price'] for item in scenario_data['items'])
             gst = round(subtotal * 0.1, 2)  # 10% GST
             total = round(subtotal + gst, 2)
@@ -149,7 +159,8 @@ class ScenarioDefinitions:
 
         config = ScenarioDefinitions.get_scenario_config(scenario_name)
 
-        # Generate item count
+        # Generate item count. Some scenarios use a range to vary receipt
+        # complexity across samples.
         if isinstance(config['item_count'], tuple):
             item_count = random.randint(*config['item_count'])
         else:
@@ -158,7 +169,9 @@ class ScenarioDefinitions:
         # Generate items
         items = ReceiptTemplates.get_random_items(config['category'], item_count)
 
-        # Calculate totals
+        # Calculate GST using the synthetic generator's simple subtotal * 10%
+        # convention. The application normalizer can later recompute GST from
+        # GST-inclusive totals if required.
         subtotal = sum(item['price'] for item in items)
         gst = round(subtotal * 0.1, 2)  # 10% GST
         total = round(subtotal + gst, 2)

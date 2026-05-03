@@ -1,3 +1,10 @@
+"""Format synthetic receipts for model training and evaluation.
+
+The generator produces rich receipt dictionaries. This module reshapes them
+into JSONL records consumed by LLM fine-tuning/evaluation tools and by this
+project's accuracy evaluator.
+"""
+
 import json
 from typing import Dict, List, Any
 from synthetic.templates import ReceiptTemplates
@@ -10,6 +17,8 @@ class LLMFormatter:
     @staticmethod
     def format_for_training(receipt_data: Dict[str, Any]) -> Dict[str, Any]:
         """Format receipt data for LLM training."""
+        # Training records contain a noisy input and the exact structured output
+        # the model should learn to produce.
         receipt_text = ReceiptTemplates.generate_receipt_text(
             receipt_data['vendor'],
             receipt_data['category'],
@@ -19,7 +28,7 @@ class LLMFormatter:
             receipt_data['date']
         )
 
-        # Add noise for realism
+        # Add light noise for realism while keeping training examples readable.
         noisy_text = NoiseGenerator.add_ocr_noise(receipt_text, noise_level=0.05)
         noisy_text = NoiseGenerator.add_layout_noise(noisy_text)
 
@@ -44,6 +53,8 @@ class LLMFormatter:
     @staticmethod
     def format_for_evaluation(receipt_data: Dict[str, Any]) -> Dict[str, Any]:
         """Format receipt data for evaluation."""
+        # Evaluation records use the same expected_output shape that the parser
+        # API returns, making field-by-field scoring straightforward.
         training_format = LLMFormatter.format_for_training(receipt_data)
 
         return {
@@ -122,6 +133,8 @@ Return only the category name and a brief reason.
     @staticmethod
     def export_dataset(dataset: List[Dict[str, Any]], filename: str, format_type: str = 'jsonl'):
         """Export dataset to file."""
+        # JSONL is preferred for large datasets because it streams cleanly and
+        # each line remains an independent sample.
         if format_type == 'jsonl':
             with open(filename, 'w') as f:
                 for item in dataset:

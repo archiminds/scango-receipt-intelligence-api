@@ -1,3 +1,9 @@
+"""OCR noise simulation utilities.
+
+The parser is fed OCR output in production, not perfect receipt text. These
+helpers inject common OCR mistakes so synthetic tests exercise that reality.
+"""
+
 import random
 import re
 from typing import List
@@ -33,6 +39,8 @@ class NoiseGenerator:
         if noise_level <= 0:
             return text
 
+        # Apply noise at the word level to preserve a mostly readable receipt
+        # while still corrupting enough tokens to test robustness.
         words = text.split()
         noisy_words = []
 
@@ -46,6 +54,8 @@ class NoiseGenerator:
     @staticmethod
     def _add_word_noise(word: str) -> str:
         """Add noise to a single word."""
+        # Rotate through several realistic OCR failure modes: wrong character,
+        # dropped character, extra character, and case confusion.
         noise_type = random.choice(['substitute', 'missing', 'extra', 'case'])
 
         if noise_type == 'substitute':
@@ -115,6 +125,8 @@ class NoiseGenerator:
     @staticmethod
     def add_layout_noise(text: str) -> str:
         """Add layout-related noise (line breaks, spacing)."""
+        # Layout noise simulates OCR engines that lose receipt alignment or add
+        # inconsistent spaces/line breaks between tokens.
         lines = text.split('\n')
         noisy_lines = []
 

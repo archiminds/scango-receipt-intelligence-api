@@ -1,3 +1,10 @@
+"""Pydantic models for the receipt parsing API contract.
+
+These schemas are shared by Lambda input validation, service orchestration,
+Bedrock parsing, DynamoDB cache serialization, and evaluation output handling.
+They are the best place to understand the shape of data moving through the app.
+"""
+
 from pydantic import BaseModel, Field, validator
 from typing import List, Optional, Dict, Any
 from datetime import datetime

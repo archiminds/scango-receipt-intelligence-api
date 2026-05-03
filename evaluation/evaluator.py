@@ -1,3 +1,10 @@
+"""Evaluation runner for parser predictions.
+
+ReceiptEvaluator loads prediction and ground-truth JSON/JSONL files, delegates
+field scoring to EvaluationMetrics, then adds error analysis and confidence
+intervals for handover/regression reporting.
+"""
+
 import json
 import logging
 import sys
@@ -61,7 +68,8 @@ class ReceiptEvaluator:
 
         logger.info("Starting evaluation...")
 
-        # Generate report
+        # Generate the core field/overall scores first, then enrich the report
+        # with diagnostics that help decide what to fix next.
         report = EvaluationMetrics.generate_report(self.predictions, self.ground_truth)
 
         # Add additional analysis
@@ -83,14 +91,15 @@ class ReceiptEvaluator:
             self.predictions, self.ground_truth
         )['individual_scores']
 
-        # Calculate error rates per field
+        # Calculate error rates per field using <80% as "needs attention".
         for field in ['vendor', 'receipt_date', 'total_amount', 'gst_amount',
                      'subtotal_amount', 'items', 'currency', 'category']:
             scores = [s[field] for s in individual_scores]
             error_rate = sum(1 for s in scores if s < 0.8) / len(scores)  # < 80% accuracy
             error_analysis['field_error_rates'][field] = error_rate
 
-        # Find common failure patterns
+        # Capture a small sample of bad cases so a maintainer can inspect
+        # concrete receipts instead of only aggregate scores.
         failures = []
         for i, (pred, truth, scores) in enumerate(zip(
             self.predictions, self.ground_truth, individual_scores
@@ -122,7 +131,8 @@ class ReceiptEvaluator:
             if len(scores) > 1:
                 mean = statistics.mean(scores)
                 stdev = statistics.stdev(scores)
-                # 95% confidence interval
+                # 95% confidence interval. This helps distinguish a true
+                # regression from sample noise, especially on small datasets.
                 margin = 1.96 * stdev / (len(scores) ** 0.5)
                 confidence_intervals[field] = {
                     'mean': mean,

@@ -1,3 +1,10 @@
+"""Deterministic fallback parser.
+
+This parser extracts only high-value fields with regex patterns when Bedrock is
+unavailable or returns invalid output. It is intentionally conservative so it
+does not invent detailed item data from weak signals.
+"""
+
 from typing import Optional
 from app.models.schemas import BedrockParseResponse, ParsedItem
 from app.core.normalizer import Normalizer
@@ -26,7 +33,7 @@ class Parser:
 
         fields = {}
 
-        # Vendor patterns
+        # Vendor patterns prefer obvious receipt header or "from/at" phrases.
         vendor_patterns = [
             r'(?:from|at)\s+([A-Z][a-zA-Z\s]+)',
             r'^([A-Z][A-Z\s]+)\n',
@@ -39,7 +46,8 @@ class Parser:
                 fields['vendor'] = match.group(1).strip()
                 break
 
-        # Date patterns
+        # Date patterns cover common numeric and month-name formats before
+        # delegating final normalization to Normalizer.
         date_patterns = [
             r'\d{1,2}[/-]\d{1,2}[/-]\d{4}',
             r'\d{4}[/-]\d{1,2}[/-]\d{1,2}',
@@ -52,7 +60,8 @@ class Parser:
                 fields['receipt_date'] = Normalizer.normalize_date(match.group(0))
                 break
 
-        # Amount patterns
+        # Amount patterns focus on explicit totals because line-item extraction
+        # without AI is much less reliable.
         amount_patterns = [
             r'total\s*[\$:]\s*([\d\.,]+)',
             r'amount\s*[\$:]\s*([\d\.,]+)',

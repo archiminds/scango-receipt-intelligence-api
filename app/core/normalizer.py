@@ -1,3 +1,10 @@
+"""Normalization helpers for extracted receipt fields.
+
+Bedrock and regex fallback parsing can return dates, amounts, vendors, and item
+lists in different shapes. These helpers convert those values into the canonical
+forms used by the API response and evaluator.
+"""
+
 import re
 from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP
@@ -46,7 +53,8 @@ class Normalizer:
             except ValueError:
                 continue
 
-        # Attempt to pull date fragments if additional text remains
+        # Attempt to pull date fragments if additional text remains, such as
+        # "Date: 2026-04-10 Register 02".
         fragment_patterns = [
             r'\d{4}[/-]\d{1,2}[/-]\d{1,2}',
             r'\d{1,2}[/-]\d{1,2}[/-]\d{2,4}',
@@ -95,7 +103,8 @@ class Normalizer:
         if isinstance(amount_str, (float, int)):
             amount_str = str(amount_str)
 
-        # Remove currency symbols and extra spaces
+        # Remove currency symbols and extra spaces while preserving separators
+        # long enough to infer decimal vs thousands formatting.
         cleaned = re.sub(r'[^\d\.,-]', '', amount_str.strip())
 
         # Handle different decimal separators
@@ -124,7 +133,8 @@ class Normalizer:
         if not vendor_str:
             return None
 
-        # Clean and title case
+        # Clean and title case. This intentionally drops punctuation so vendor
+        # comparisons remain stable across OCR variants.
         cleaned = re.sub(r'[^\w\s]', '', vendor_str.strip())
         return cleaned.title() if cleaned else None
 
@@ -145,6 +155,8 @@ class Normalizer:
                 unit_price = Normalizer.normalize_amount(item_data.get('unit_price'))
                 total_price = Normalizer.normalize_amount(item_data.get('total_price'))
 
+                # Fill whichever item price representation is missing so later
+                # subtotal and evaluator logic can use either field.
                 if total_price is None and unit_price is not None:
                     total_price = (unit_price * Decimal(quantity)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
                 elif unit_price is None and total_price is not None:
@@ -172,7 +184,7 @@ class Normalizer:
         if total_amount is None:
             return Decimal('0.00')
 
-        # Australian GST: GST = total * (10/110)
+        # Australian GST is 1/11 of a GST-inclusive total: total * (10/110).
         gst_rate = Decimal('10') / Decimal('110')
         gst = (total_amount * gst_rate).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
 

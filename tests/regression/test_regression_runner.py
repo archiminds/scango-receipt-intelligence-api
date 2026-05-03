@@ -1,3 +1,9 @@
+"""Tests for evaluation regression baseline behavior.
+
+These tests use temporary files so baseline creation and update logic can be
+verified without modifying the repository's real evaluation results.
+"""
+
 import pytest
 import json
 from evaluation.regression_runner import RegressionRunner

@@ -1,3 +1,9 @@
+"""Final response helpers.
+
+Postprocessing owns request IDs, cache hashes, and final confidence scoring so
+the service can keep its main workflow readable.
+"""
+
 import hashlib
 import uuid
 from typing import Optional
@@ -23,6 +29,8 @@ class Postprocessor:
         confidence = 0.0
         factors = 0
 
+        # The score is a weighted heuristic over extracted fields. It is not a
+        # model probability; it is a practical signal for downstream consumers.
         # Vendor confidence
         if response.vendor:
             confidence += 0.8
@@ -60,7 +68,8 @@ class Postprocessor:
                          cache_status: str,
                          warnings: list) -> ReceiptParseResponse:
         """Finalize the response with calculated fields."""
-        # Update confidence score
+        # Update confidence score after validation because warnings may reflect
+        # fields that reduce trust in the result.
         response.confidence_score = Postprocessor.calculate_confidence_score(response)
 
         # Set cache status and request ID

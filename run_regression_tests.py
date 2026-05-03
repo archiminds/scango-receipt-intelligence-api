@@ -2,6 +2,10 @@
 """
 Simple regression test flow for receipt parsing API.
 This script generates synthetic data, runs evaluation, and checks for regressions.
+
+This is a local demonstration harness: it currently uses generated ground truth
+as simulated predictions. For deployed API accuracy, use
+scripts/run_custom_predictions.py and evaluation.evaluator instead.
 """
 
 import os
@@ -46,7 +50,8 @@ def main():
     generator.save_dataset(training_data, str(training_data_file))
     print(f"   Generated {len(training_data)} training samples")
 
-    # Step 2: Simulate predictions (using ground truth as predictions for testing)
+    # Step 2: Simulate predictions using ground truth. This proves the
+    # evaluation/regression framework works without calling the live API.
     print("2. Simulating predictions...")
     # In real scenario, this would be actual model predictions
     predictions = test_data.copy()  # Using ground truth as predictions for demo

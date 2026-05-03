@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Replay synthetic samples through the IAM-protected API and capture responses."""
+"""Replay synthetic samples through the IAM-protected API and capture responses.
+
+The script signs each request with AWS SigV4 using the configured local AWS
+profile, then writes API responses as prediction records for the evaluator.
+"""
 
 import json
 import sys
@@ -23,6 +27,8 @@ PROFILE = "default"
 
 def _sigv4_auth():
   """Return AWS4Auth signer using the configured profile/region."""
+  # The deployed API uses API Gateway AWS_IAM authorization, so requests must be
+  # signed for the execute-api service with valid AWS credentials.
   session = boto3.Session(profile_name=PROFILE, region_name=REGION)
   creds = session.get_credentials().get_frozen_credentials()
   return AWS4Auth(
@@ -40,6 +46,8 @@ def main():
   with DATASET_PATH.open() as src, OUT_PATH.open("w") as dst:
     for line in src:
       sample = json.loads(line)
+      # Prefer clean_text for deterministic API evaluation. Switch to
+      # receipt_text when specifically testing OCR-noise robustness.
       payload = {
           "receipt_text": sample.get("clean_text") or sample.get("receipt_text"),
           "currency": sample["expected_output"].get("currency", "AUD"),
@@ -53,6 +61,8 @@ def main():
       resp = requests.post(API_URL, json=payload, auth=auth, timeout=30)
       resp.raise_for_status()
 
+      # The evaluator accepts records where the predicted API output lives under
+      # expected_output, matching the synthetic dataset shape.
       dst.write(
           json.dumps(
               {

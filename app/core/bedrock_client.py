@@ -1,3 +1,10 @@
+"""Amazon Bedrock integration for AI receipt parsing.
+
+The client is deliberately small: it builds a strict JSON-only prompt, invokes
+Nova through ``bedrock-runtime``, and extracts a Python dictionary from either
+legacy or current Bedrock response shapes.
+"""
+
 import boto3
 import json
 import logging
@@ -47,8 +54,12 @@ class BedrockClient:
         try:
             logger.debug(f"Parsing receipt with Bedrock model {self.model_id}")
 
+            # Keep prompt construction isolated so changes to parsing behavior
+            # are easy to review without touching boto3 invocation code.
             prompt = self._build_parse_prompt(request.receipt_text, request.currency)
 
+            # Nova's Messages API expects content parts under messages. Low
+            # temperature keeps extraction deterministic for regression tests.
             body = {
                 "messages": [
                     {
@@ -75,6 +86,8 @@ class BedrockClient:
 
             response_body = json.loads(response['body'].read())
             logger.debug(f"Bedrock raw response: {json.dumps(response_body)}")
+            # Bedrock may return model text wrapped in provider-specific
+            # envelopes, so extract JSON before constructing the typed response.
             parsed_data = self._extract_structured_data(response_body)
 
             if parsed_data:
@@ -115,6 +128,8 @@ class BedrockClient:
     def _build_parse_prompt(self, receipt_text: str, currency: str) -> str:
         """Build the prompt for receipt parsing."""
         categories = ", ".join(self.SUPPORTED_CATEGORIES)
+        # The prompt asks for JSON only because downstream parsing intentionally
+        # does not accept markdown, prose, or partial explanations as valid data.
         return f"""
 You are a receipts parsing engine. Convert the OCR text into structured JSON.
 Output ONLY valid JSON with this schema (do not wrap in Markdown):
@@ -172,7 +187,9 @@ Receipt text:
                 logger.warning("Bedrock response missing text content: %s", json.dumps(response_body))
                 return None
 
-            # Try to parse JSON from the response
+            # Models can occasionally include small leading/trailing text. Pull
+            # the outermost JSON object while still rejecting responses with no
+            # object at all.
             start_idx = content_text.find('{')
             end_idx = content_text.rfind('}') + 1
 

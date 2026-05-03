@@ -1,3 +1,10 @@
+"""OCR text preprocessing utilities.
+
+Preprocessing has two distinct jobs: produce cleaner text for parsing and
+produce normalized text for stable cache keys. Keeping them separate avoids
+over-cleaning the text sent to Bedrock.
+"""
+
 import re
 from typing import Optional
 
@@ -11,7 +18,8 @@ class Preprocessor:
         if not text:
             return ""
 
-        # Remove excessive whitespace
+        # Remove excessive whitespace while preserving the text content that
+        # Bedrock and regex fallback need for extraction.
         text = re.sub(r'\s+', ' ', text.strip())
 
         # Remove common OCR artifacts
@@ -29,7 +37,8 @@ class Preprocessor:
         if not text:
             return ""
 
-        # Convert to lowercase
+        # Convert to lowercase and remove non-essential punctuation so cache
+        # hashes are stable across minor OCR differences.
         text = text.lower()
 
         # Remove punctuation except essential ones
